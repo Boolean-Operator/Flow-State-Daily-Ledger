@@ -2,11 +2,17 @@
 
 import { revalidatePath } from "next/cache";
 import * as dal from "./data";
-import { TaskUpdate } from "./types";
+import { DailySection, TaskUpdate } from "./types";
 
 function revalidateCollection(collectionId?: string) {
   revalidatePath("/");
+  revalidatePath("/collections");
   if (collectionId) revalidatePath(`/lists/${collectionId}`);
+}
+
+function revalidateDailyLedger() {
+  revalidatePath("/");
+  revalidatePath("/collections");
 }
 
 export async function createProjectAction(title: string) {
@@ -61,4 +67,81 @@ export async function reorderTasksAction(
 ) {
   await dal.reorderTasks(collectionId, taskIds);
   revalidateCollection(collectionId);
+}
+
+export async function createDailyTaskAction(
+  date: string,
+  section: DailySection,
+  title: string,
+) {
+  await dal.createDailyTask(date, section, title);
+  revalidateDailyLedger();
+}
+
+export async function addTaskToDailyLedgerAction(
+  date: string,
+  taskId: string,
+  section: DailySection,
+) {
+  await dal.addTaskToDailyLedger(date, taskId, section);
+  revalidateDailyLedger();
+}
+
+export async function setDailyTaskCompletedAction(
+  entryId: string,
+  completed: boolean,
+) {
+  await dal.setDailyTaskCompleted(entryId, completed);
+  revalidateDailyLedger();
+}
+
+export async function updateDailyTaskTitleAction(
+  entryId: string,
+  title: string,
+) {
+  await dal.updateDailyTaskTitle(entryId, title);
+  revalidateDailyLedger();
+}
+
+export async function moveDailyEntryAction(
+  entryId: string,
+  section: DailySection,
+) {
+  await dal.moveDailyEntry(entryId, section);
+  revalidateDailyLedger();
+}
+
+export async function removeDailyEntryAction(entryId: string) {
+  await dal.removeDailyEntry(entryId);
+  revalidateDailyLedger();
+}
+
+export async function reorderDailyEntriesAction(
+  ledgerId: string,
+  section: DailySection,
+  entryIds: string[],
+) {
+  await dal.reorderDailyEntries(ledgerId, section, entryIds);
+  revalidateDailyLedger();
+}
+
+export async function addStandupItemAction(
+  ledgerId: string,
+  content: string,
+) {
+  await dal.addStandupItem(ledgerId, content);
+  revalidateDailyLedger();
+}
+
+export async function updateStandupItemAction(
+  itemId: string,
+  content: string,
+) {
+  await dal.updateStandupItem(itemId, content);
+  revalidateDailyLedger();
+}
+
+export async function deleteStandupItemAction(itemId: string) {
+  await dal.deleteStandupItem(itemId);
+  revalidateDailyLedger();
 }

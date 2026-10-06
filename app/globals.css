@@ -133,5 +133,11 @@
   body {
     @apply bg-background text-foreground;
     font-family: inherit;
+    background-image: linear-gradient(
+      to bottom,
+      color-mix(in oklch, var(--background), oklch(0.97 0.012 80) 24%),
+      var(--background) 28rem
+    );
+    background-attachment: fixed;
   }
 }

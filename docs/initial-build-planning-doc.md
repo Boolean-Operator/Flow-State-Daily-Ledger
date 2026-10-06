@@ -120,6 +120,19 @@ The goal of v0.1 is to validate the core FSDL workflow and mobile-first UI using
 - Support creating, editing, completing, ordering, and removing daily tasks.
 - Do not include free-form notes or ideas in the first prototype.
 
+#### Initial Daily Page Implementation
+
+The first Daily Ledger page is implemented as the application's home screen. It includes:
+
+- The current date and a reserved Yesterday / Standup area.
+- Mobile-first Work / Standup and Personal / Home sections.
+- Quick capture directly into either section.
+- Completion, title editing, section switching, and manual ordering.
+- Removal from today without deleting the canonical task.
+- An explicit picker for pulling active Backburner or project tasks into today.
+
+This is the starting interaction model for testing, not a permanent UI commitment. The hard-stop and daily-rollover workflows remain the next major Daily Ledger increment.
+
 ### Hard-Stop Wrap-Up
 
 At the end of the day, unfinished Daily Ledger tasks remain part of that day's historical record and require an explicit disposition:

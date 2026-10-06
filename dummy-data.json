@@ -3086,10 +3086,140 @@
       "sourceListTitle": "Back Burner",
       "sourceOrder": 84,
       "sourcePriority": null
+    },
+    {
+      "id": "ef9f954c-95e9-4448-9ec4-3d7749ed82be",
+      "title": "2027 Planning Kickoff",
+      "description": null,
+      "status": "COMPLETED",
+      "area": "WORK",
+      "projectId": null,
+      "parentTaskId": null,
+      "priority": null,
+      "calculatedUrgency": null,
+      "hardDueDate": null,
+      "targetDate": "2026-10-06",
+      "sortOrder": 85,
+      "createdAt": "2026-10-06T15:46:58.528Z",
+      "completedAt": "2026-10-06T18:52:05.595Z",
+      "canceledAt": null,
+      "source": "APP",
+      "sourceListId": null,
+      "sourceListTitle": null,
+      "sourceOrder": null,
+      "sourcePriority": null
+    },
+    {
+      "id": "e5d2b03c-1c43-4b9c-95e2-9c7231548d61",
+      "title": "To Do: Create refinement ticket to implement Mobile UX upgrades. Related:  DIGDEV-6749",
+      "description": null,
+      "status": "OPEN",
+      "area": "WORK",
+      "projectId": null,
+      "parentTaskId": null,
+      "priority": null,
+      "calculatedUrgency": null,
+      "hardDueDate": null,
+      "targetDate": "2026-10-06",
+      "sortOrder": 86,
+      "createdAt": "2026-10-06T18:32:40.238Z",
+      "completedAt": null,
+      "canceledAt": null,
+      "source": "APP",
+      "sourceListId": null,
+      "sourceListTitle": null,
+      "sourceOrder": null,
+      "sourcePriority": null
+    },
+    {
+      "id": "94439668-e832-4a16-b906-ab6d487c2003",
+      "title": "DIGDEV - 4781 Investigate and triage",
+      "description": null,
+      "status": "OPEN",
+      "area": "WORK",
+      "projectId": null,
+      "parentTaskId": null,
+      "priority": null,
+      "calculatedUrgency": null,
+      "hardDueDate": null,
+      "targetDate": "2026-10-06",
+      "sortOrder": 87,
+      "createdAt": "2026-10-06T18:34:02.558Z",
+      "completedAt": null,
+      "canceledAt": null,
+      "source": "APP",
+      "sourceListId": null,
+      "sourceListTitle": null,
+      "sourceOrder": null,
+      "sourcePriority": null
     }
   ],
-  "dailyLedgers": [],
-  "dailyLedgerEntries": [],
+  "dailyLedgers": [
+    {
+      "id": "0d8e4819-955f-4ead-8437-e6d248c4ead6",
+      "date": "2026-10-06",
+      "status": "OPEN",
+      "createdAt": "2026-10-06T15:43:29.142Z",
+      "closedAt": null
+    }
+  ],
+  "dailyLedgerEntries": [
+    {
+      "id": "211a3733-3049-43da-81f9-b6b31dd80a84",
+      "ledgerId": "0d8e4819-955f-4ead-8437-e6d248c4ead6",
+      "taskId": "ef9f954c-95e9-4448-9ec4-3d7749ed82be",
+      "section": "WORK",
+      "sortOrder": 0,
+      "outcome": "COMPLETED",
+      "createdAt": "2026-10-06T15:46:58.528Z"
+    },
+    {
+      "id": "06b53649-03dc-425b-90f9-843e8746bac5",
+      "ledgerId": "0d8e4819-955f-4ead-8437-e6d248c4ead6",
+      "taskId": "e5d2b03c-1c43-4b9c-95e2-9c7231548d61",
+      "section": "WORK",
+      "sortOrder": 1,
+      "outcome": "OPEN",
+      "createdAt": "2026-10-06T18:32:40.238Z"
+    },
+    {
+      "id": "9d190e68-6449-4e06-ac0d-ad788f17a3ad",
+      "ledgerId": "0d8e4819-955f-4ead-8437-e6d248c4ead6",
+      "taskId": "94439668-e832-4a16-b906-ab6d487c2003",
+      "section": "WORK",
+      "sortOrder": 2,
+      "outcome": "OPEN",
+      "createdAt": "2026-10-06T18:34:02.558Z"
+    }
+  ],
   "radarEntries": [],
-  "standupItems": []
+  "standupItems": [
+    {
+      "id": "8ed45daa-69d0-4de0-a388-3a540e57ec6b",
+      "ledgerId": "0d8e4819-955f-4ead-8437-e6d248c4ead6",
+      "taskId": null,
+      "summary": "DIGDEV - 6843 moved to Ready for QA",
+      "detail": null,
+      "sortOrder": 0,
+      "createdAt": "2026-10-06T16:00:00.000Z"
+    },
+    {
+      "id": "12e8be89-d636-4cb3-a801-f0244d2c23de",
+      "ledgerId": "0d8e4819-955f-4ead-8437-e6d248c4ead6",
+      "taskId": null,
+      "summary": "DIGDEV - 6749 moved to in QA review",
+      "detail": null,
+      "sortOrder": 1,
+      "createdAt": "2026-10-06T16:00:00.000Z"
+    },
+    {
+      "id": "4e7ef853-9784-4e3c-8c1c-55381ca056a5",
+      "ledgerId": "0d8e4819-955f-4ead-8437-e6d248c4ead6",
+      "taskId": null,
+      "summary": "DIGDEV - 4781 Investigate and triage",
+      "detail": null,
+      "sortOrder": 2,
+      "createdAt": "2026-10-06T16:00:00.000Z"
+    }
+  ]
 }

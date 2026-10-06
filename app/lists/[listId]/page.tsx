@@ -23,7 +23,7 @@ export default async function ListPage({
           className="border-blue-600 bg-white text-blue-600"
           size="sm"
         >
-          <Link href="/">Collections</Link>
+          <Link href="/collections">Collections</Link>
         </Button>
       </header>
 
