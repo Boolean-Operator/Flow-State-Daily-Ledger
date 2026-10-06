@@ -91,7 +91,7 @@ function DailyTaskRow({
         isPending ? "opacity-60" : ""
       }`}
     >
-      <div className="flex items-start gap-3">
+      <div className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-x-3 gap-y-2 sm:grid-cols-[auto_minmax(0,1fr)_auto]">
         <input
           type="checkbox"
           aria-label={`Mark ${item.task.title} complete`}
@@ -136,7 +136,7 @@ function DailyTaskRow({
           </div>
         </div>
 
-        <div className="flex shrink-0 items-center gap-0.5">
+        <div className="col-start-2 flex items-center justify-end gap-0.5 sm:col-start-3 sm:row-start-1">
           <button
             type="button"
             aria-label="Edit task"

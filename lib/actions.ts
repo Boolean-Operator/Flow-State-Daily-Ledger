@@ -61,6 +61,42 @@ export async function deleteTaskAction(
   revalidateCollection(collectionId);
 }
 
+export async function moveTasksAction(
+  sourceCollectionId: string,
+  taskIds: string[],
+  destinationCollectionId: string,
+) {
+  await dal.moveTasks(taskIds, destinationCollectionId);
+  revalidateCollection(sourceCollectionId);
+  revalidateCollection(destinationCollectionId);
+}
+
+export async function createProjectFromTasksAction(
+  sourceCollectionId: string,
+  title: string,
+  taskIds: string[],
+) {
+  await dal.createProjectFromTasks(title, taskIds);
+  revalidateCollection(sourceCollectionId);
+  revalidateCollection();
+}
+
+export async function archiveTasksAction(
+  collectionId: string,
+  taskIds: string[],
+) {
+  await dal.archiveTasks(taskIds);
+  revalidateCollection(collectionId);
+}
+
+export async function deleteTasksAction(
+  collectionId: string,
+  taskIds: string[],
+) {
+  await dal.deleteTasks(taskIds);
+  revalidateCollection(collectionId);
+}
+
 export async function reorderTasksAction(
   collectionId: string,
   taskIds: string[],

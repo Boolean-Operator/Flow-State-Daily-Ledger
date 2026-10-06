@@ -26,6 +26,10 @@ function sortTasks(tasks: Task[]) {
   return [...tasks].sort((a, b) => a.sortOrder - b.sortOrder);
 }
 
+function isVisibleCollectionTask(task: Task) {
+  return task.status !== "ARCHIVED";
+}
+
 export async function readData(): Promise<DataStore> {
   const raw = await fs.readFile(DATA_PATH, "utf-8");
   const parsed = DataStoreSchema.safeParse(JSON.parse(raw));
@@ -63,7 +67,10 @@ export async function getTaskCollections(): Promise<TaskCollection[]> {
     title: "Back Burner",
     tasks: sortTasks(
       data.tasks.filter(
-        (task) => task.projectId === null && !activeDailyTaskIds.has(task.id),
+        (task) =>
+          task.projectId === null &&
+          isVisibleCollectionTask(task) &&
+          !activeDailyTaskIds.has(task.id),
       ),
     ),
     isSystem: true,
@@ -76,7 +83,10 @@ export async function getTaskCollections(): Promise<TaskCollection[]> {
       id: project.id,
       title: project.title,
       tasks: sortTasks(
-        data.tasks.filter((task) => task.projectId === project.id),
+        data.tasks.filter(
+          (task) =>
+            task.projectId === project.id && isVisibleCollectionTask(task),
+        ),
       ),
       isSystem: false,
     }));
@@ -93,7 +103,11 @@ export async function getTaskCollectionById(
     return {
       id,
       title: "Back Burner",
-      tasks: sortTasks(data.tasks.filter((task) => task.projectId === null)),
+      tasks: sortTasks(
+        data.tasks.filter(
+          (task) => task.projectId === null && isVisibleCollectionTask(task),
+        ),
+      ),
       isSystem: true,
     };
   }
@@ -106,7 +120,11 @@ export async function getTaskCollectionById(
   return {
     id: project.id,
     title: project.title,
-    tasks: sortTasks(data.tasks.filter((task) => task.projectId === project.id)),
+    tasks: sortTasks(
+      data.tasks.filter(
+        (task) => task.projectId === project.id && isVisibleCollectionTask(task),
+      ),
+    ),
     isSystem: false,
   };
 }
@@ -219,7 +237,11 @@ export async function addTaskToCollection(
 export async function reorderTasks(collectionId: string, taskIds: string[]) {
   const data = await readData();
   const collectionTaskIds = data.tasks
-    .filter((task) => taskBelongsToCollection(task, collectionId))
+    .filter(
+      (task) =>
+        taskBelongsToCollection(task, collectionId) &&
+        isVisibleCollectionTask(task),
+    )
     .map((task) => task.id);
 
   if (
@@ -276,11 +298,122 @@ export async function updateTask(taskId: string, updates: TaskUpdate) {
 }
 
 export async function deleteTask(taskId: string) {
-  const data = await readData();
-  const nextTasks = data.tasks.filter((task) => task.id !== taskId);
-  if (nextTasks.length === data.tasks.length) throw new Error("Task not found");
+  await deleteTasks([taskId]);
+}
 
-  data.tasks = nextTasks;
+function getUniqueTaskIds(taskIds: string[]) {
+  const uniqueTaskIds = [...new Set(taskIds)];
+  if (uniqueTaskIds.length === 0) throw new Error("Select at least one task");
+  return uniqueTaskIds;
+}
+
+function assertTasksExist(data: DataStore, taskIds: string[]) {
+  const existingTaskIds = new Set(data.tasks.map((task) => task.id));
+  if (taskIds.some((id) => !existingTaskIds.has(id))) {
+    throw new Error("One or more selected tasks were not found");
+  }
+}
+
+function moveTasksInData(
+  data: DataStore,
+  taskIds: string[],
+  destinationCollectionId: string,
+) {
+  if (
+    destinationCollectionId !== BACK_BURNER_ID &&
+    !data.projects.some(
+      (project) =>
+        project.id === destinationCollectionId && project.status === "ACTIVE",
+    )
+  ) {
+    throw new Error("Destination project not found");
+  }
+
+  const destinationProjectId =
+    destinationCollectionId === BACK_BURNER_ID
+      ? null
+      : destinationCollectionId;
+  let nextSortOrder = data.tasks.filter(
+    (task) =>
+      task.projectId === destinationProjectId && !taskIds.includes(task.id),
+  ).length;
+
+  for (const taskId of taskIds) {
+    const task = data.tasks.find((candidate) => candidate.id === taskId);
+    if (!task) continue;
+    task.projectId = destinationProjectId;
+    task.sortOrder = nextSortOrder;
+    nextSortOrder += 1;
+  }
+}
+
+export async function moveTasks(
+  taskIds: string[],
+  destinationCollectionId: string,
+) {
+  const data = await readData();
+  const uniqueTaskIds = getUniqueTaskIds(taskIds);
+  assertTasksExist(data, uniqueTaskIds);
+  moveTasksInData(data, uniqueTaskIds, destinationCollectionId);
+  await writeData(data);
+}
+
+export async function createProjectFromTasks(
+  title: string,
+  taskIds: string[],
+): Promise<Project> {
+  const data = await readData();
+  const normalizedTitle = title.trim();
+  const uniqueTaskIds = getUniqueTaskIds(taskIds);
+  if (!normalizedTitle) throw new Error("Project title is required");
+  assertTasksExist(data, uniqueTaskIds);
+
+  const project: Project = {
+    id: crypto.randomUUID(),
+    title: normalizedTitle,
+    description: null,
+    status: "ACTIVE",
+    sortOrder: data.projects.length,
+    createdAt: new Date().toISOString(),
+    archivedAt: null,
+    sourceListId: null,
+  };
+
+  data.projects.push(project);
+  moveTasksInData(data, uniqueTaskIds, project.id);
+  await writeData(data);
+  return project;
+}
+
+export async function archiveTasks(taskIds: string[]) {
+  const data = await readData();
+  const uniqueTaskIds = getUniqueTaskIds(taskIds);
+  assertTasksExist(data, uniqueTaskIds);
+  const selectedIds = new Set(uniqueTaskIds);
+
+  for (const task of data.tasks) {
+    if (selectedIds.has(task.id)) task.status = "ARCHIVED";
+  }
+
+  await writeData(data);
+}
+
+export async function deleteTasks(taskIds: string[]) {
+  const data = await readData();
+  const uniqueTaskIds = getUniqueTaskIds(taskIds);
+  assertTasksExist(data, uniqueTaskIds);
+  const selectedIds = new Set(uniqueTaskIds);
+
+  data.tasks = data.tasks.filter((task) => !selectedIds.has(task.id));
+  data.dailyLedgerEntries = data.dailyLedgerEntries.filter(
+    (entry) => !selectedIds.has(entry.taskId),
+  );
+  data.radarEntries = data.radarEntries.filter(
+    (entry) => !selectedIds.has(entry.taskId),
+  );
+  for (const item of data.standupItems) {
+    if (item.taskId && selectedIds.has(item.taskId)) item.taskId = null;
+  }
   await writeData(data);
 }
 
@@ -443,7 +576,7 @@ export async function addTaskToDailyLedger(
   if (ledger.status !== "OPEN") throw new Error("Daily ledger is closed");
   const task = data.tasks.find((candidate) => candidate.id === taskId);
   if (!task) throw new Error("Task not found");
-  if (task.status === "COMPLETED" || task.status === "CANCELED") {
+  if (task.status !== "OPEN" && task.status !== "IN_PROGRESS") {
     throw new Error("Only active tasks can be added to today's ledger");
   }
   if (

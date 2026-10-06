@@ -25,43 +25,52 @@ export default function TodoForm({
   }
 
   return (
-    <div className="flex w-full justify-between">
-      <div className="flex w-full border p-2 rounded space-x-2">
+    <form
+      onSubmit={(event) => {
+        event.preventDefault();
+        void submit();
+      }}
+      className="w-full rounded-lg border p-3"
+    >
+      <div className="flex min-w-0 flex-col gap-2 sm:flex-row">
         <input
-          className="flex-1 px-1"
+          className="min-w-0 flex-1 rounded-md border px-2 py-2 outline-none focus:border-blue-500"
           placeholder="Add New Item"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
-        <div className="flex space-x-1">
+        <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_5rem_auto] gap-2 sm:grid-cols-[minmax(0,1fr)_6rem_auto]">
           <input
             type="date"
-            className="border rounded px-1"
+            aria-label="Target date"
+            className="min-w-0 max-w-full rounded-md border px-2 py-2 text-sm sm:text-base"
             value={targetDate}
             onChange={(e) => setTargetDate(e.target.value)}
           />
-          <input
-            type="number"
-            className="border w-20 rounded px-1"
-            placeholder="Priority"
+          <select
+            aria-label="Priority"
+            className="h-10 min-w-0 rounded-md border bg-white px-2"
             value={priority === undefined ? "" : priority}
-            min={1}
-            max={5}
             onChange={(e) =>
               setPriority(e.target.value ? Number(e.target.value) : undefined)
             }
-          />
-          {/* </div>
-      <div className="flex min-w-full justify-center"> */}
+          >
+            <option value="">Priority</option>
+            {[1, 2, 3, 4, 5].map((value) => (
+              <option key={value} value={value}>
+                P{value}
+              </option>
+            ))}
+          </select>
           <Button
-            className="px-4 hover:bg-green-700 hover:text-white text-green-700 bg-white"
+            className="h-10 bg-white px-4 text-green-700 hover:bg-green-700 hover:text-white"
             variant="outline"
-            onClick={submit}
+            type="submit"
           >
             Add
           </Button>
         </div>
       </div>
-    </div>
+    </form>
   );
 }
