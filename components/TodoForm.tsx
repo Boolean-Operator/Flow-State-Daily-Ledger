@@ -3,14 +3,12 @@
 
 import { useState } from "react";
 import { Button } from "./ui/button";
-import { addTodoAction } from "@/lib/actions";
+import { addTaskAction } from "@/lib/actions";
 
 export default function TodoForm({
-  listId,
-  // onAdd,
+  collectionId,
 }: {
-  listId: string;
-  // onAdd: () => void;
+  collectionId: string;
 }) {
   const [title, setTitle] = useState("");
   const [targetDate, setTargetDate] = useState("");
@@ -19,7 +17,7 @@ export default function TodoForm({
   async function submit() {
     if (!title) return;
 
-    await addTodoAction(listId, title, targetDate, priority);
+    await addTaskAction(collectionId, title, targetDate, priority);
 
     setTitle("");
     setTargetDate("");
@@ -48,6 +46,7 @@ export default function TodoForm({
             placeholder="Priority"
             value={priority === undefined ? "" : priority}
             min={1}
+            max={5}
             onChange={(e) =>
               setPriority(e.target.value ? Number(e.target.value) : undefined)
             }

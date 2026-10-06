@@ -1,51 +1,56 @@
 // components/TodoList.tsx
 "use client";
 
-import { TodoList as ListType } from "@/lib/types";
+import { TaskCollection } from "@/lib/types";
 import TodoItem from "./TodoItem";
 import TodoForm from "./TodoForm";
-import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-import { reorderTodosAction } from "@/lib/actions";
+import {
+  DragDropContext,
+  Droppable,
+  Draggable,
+  DropResult,
+} from "@hello-pangea/dnd";
+import { reorderTasksAction } from "@/lib/actions";
 
 export default function TodoList({
-  list,
-  // onChange,
+  collection,
 }: {
-  list: ListType;
-  // onChange: () => void;
+  collection: TaskCollection;
 }) {
-  const todos = [...list.todos].sort((a, b) => a.order - b.order);
+  const tasks = [...collection.tasks].sort(
+    (a, b) => a.sortOrder - b.sortOrder,
+  );
 
-  async function onDragEnd(result: any) {
+  async function onDragEnd(result: DropResult) {
     if (!result.destination) return;
 
-    const reordered = Array.from(todos);
+    const reordered = Array.from(tasks);
     const [moved] = reordered.splice(result.source.index, 1);
     reordered.splice(result.destination.index, 0, moved);
 
-    await reorderTodosAction(
-      list.id,
+    await reorderTasksAction(
+      collection.id,
       reordered.map((t) => t.id),
     );
   }
 
   return (
     <section className="space-y-2">
-      <TodoForm listId={list.id} />
+      <TodoForm collectionId={collection.id} />
 
       <DragDropContext onDragEnd={onDragEnd}>
         <Droppable droppableId="todos">
           {(p) => (
             <ul ref={p.innerRef} {...p.droppableProps} className="space-y-2">
-              {todos.map((todo, i) => (
-                <Draggable key={todo.id} draggableId={todo.id} index={i}>
+              {tasks.map((task, i) => (
+                <Draggable key={task.id} draggableId={task.id} index={i}>
                   {(p) => (
                     <li
                       ref={p.innerRef}
                       {...p.draggableProps}
                       {...p.dragHandleProps}
                     >
-                      <TodoItem listId={list.id} todo={todo} />
+                      <TodoItem collectionId={collection.id} task={task} />
                     </li>
                   )}
                 </Draggable>

@@ -3,18 +3,18 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { TodoList } from "@/lib/types";
+import { TaskCollection } from "@/lib/types";
 import {
-  createListAction,
-  updateListTitleAction,
-  deleteListAction,
+  archiveProjectAction,
+  createProjectAction,
+  updateProjectTitleAction,
 } from "@/lib/actions";
 import { Button } from "./ui/button";
 
 export default function ListManager({
-  initialLists,
+  initialCollections,
 }: {
-  initialLists: TodoList[];
+  initialCollections: TaskCollection[];
 }) {
   const [newTitle, setNewTitle] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -22,23 +22,22 @@ export default function ListManager({
 
   async function handleCreate() {
     if (!newTitle.trim()) return;
-    await createListAction(newTitle);
+    await createProjectAction(newTitle);
     setNewTitle("");
   }
 
   async function handleUpdate(id: string) {
     if (!editTitle.trim()) return;
-    await updateListTitleAction(id, editTitle);
+    await updateProjectTitleAction(id, editTitle);
     setEditingId(null);
   }
 
   return (
     <section className="space-y-6">
-      {/* Create List Form */}
       <div className="flex gap-2 pb-6 border-b-2">
         <input
           className="border rounded px-3 py-2 flex-1 focus:ring-2 focus:ring-blue-500 outline-none"
-          placeholder="New list title"
+          placeholder="New project title"
           value={newTitle}
           onChange={(e) => setNewTitle(e.target.value)}
         />
@@ -46,18 +45,17 @@ export default function ListManager({
           onClick={handleCreate}
           className="border border-blue-600 bg-white hover:bg-blue-700 text-blue-600 hover:text-white"
         >
-          Create List
+          Create Project
         </Button>
       </div>
 
-      {/* Lists Display */}
       <ul className="space-y-3">
-        {initialLists.map((list) => (
+        {initialCollections.map((collection) => (
           <li
-            key={list.id}
+            key={collection.id}
             className="flex items-center justify-between px-4 py-1 border rounded-lg bg-white shadow-sm"
           >
-            {editingId === list.id ? (
+            {editingId === collection.id ? (
               <div className="flex gap-2 flex-1">
                 <input
                   className="border rounded px-2 py-1 flex-1"
@@ -66,7 +64,7 @@ export default function ListManager({
                   autoFocus
                 />
                 <Button
-                  onClick={() => handleUpdate(list.id)}
+                  onClick={() => handleUpdate(collection.id)}
                   className="bg-green-600 text-white"
                 >
                   Save
@@ -78,33 +76,35 @@ export default function ListManager({
             ) : (
               <>
                 <Link
-                  href={`/lists/${list.id}`}
+                  href={`/lists/${collection.id}`}
                   className="text-lg font-medium hover:cursor-pointer flex-1"
                 >
-                  {list.title}
+                  {collection.title}
                   <span className="ml-2 text-sm text-gray-400">
-                    ({list.todos.length} items)
+                    ({collection.tasks.length} items)
                   </span>
                 </Link>
-                <div className="flex gap-2">
-                  <Button
-                    onClick={() => {
-                      setEditingId(list.id);
-                      setEditTitle(list.title);
-                    }}
-                    variant="ghost"
-                    className="text-gray-600 hover:text-blue-600"
-                  >
-                    Edit
-                  </Button>
-                  <Button
-                    onClick={() => deleteListAction(list.id)}
-                    variant="ghost"
-                    className="text-gray-400 hover:text-red-600"
-                  >
-                    Delete
-                  </Button>
-                </div>
+                {!collection.isSystem && (
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() => {
+                        setEditingId(collection.id);
+                        setEditTitle(collection.title);
+                      }}
+                      variant="ghost"
+                      className="text-gray-600 hover:text-blue-600"
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      onClick={() => archiveProjectAction(collection.id)}
+                      variant="ghost"
+                      className="text-gray-400 hover:text-amber-700"
+                    >
+                      Archive
+                    </Button>
+                  </div>
+                )}
               </>
             )}
           </li>

@@ -1,8 +1,9 @@
 // components/ListSelector.tsx
 "use client";
 
-import { TodoList } from "@/lib/types";
+import { TaskCollection } from "@/lib/types";
 import { useState } from "react";
+import { createProjectAction } from "@/lib/actions";
 import {
   Select,
   SelectContent,
@@ -14,11 +15,11 @@ import {
 } from "@/components/ui/select";
 
 export default function ListSelector({
-  lists,
+  collections,
   onSelect,
   onChange,
 }: {
-  lists: TodoList[];
+  collections: TaskCollection[];
   onSelect: (id: string) => void;
   onChange: () => void;
 }) {
@@ -27,11 +28,7 @@ export default function ListSelector({
   async function createList() {
     if (!newTitle.trim()) return;
 
-    await fetch("/api/lists", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title: newTitle }),
-    });
+    await createProjectAction(newTitle);
 
     setNewTitle("");
     onChange();
@@ -52,7 +49,7 @@ export default function ListSelector({
       {/* Select list */}
       <div className="flex">
         <ul>
-          {lists.map((item) => (
+          {collections.map((item) => (
             <li key={item.id}>{item.title}</li>
           ))}
         </ul>
@@ -66,7 +63,7 @@ export default function ListSelector({
         <SelectContent>
           <SelectGroup>
             <SelectLabel>Select a list</SelectLabel>
-            {lists.map((item) => (
+            {collections.map((item) => (
               <SelectItem key={item.id} value={item.id}>
                 {item.title}
               </SelectItem>
@@ -82,7 +79,7 @@ export default function ListSelector({
         <option value="" disabled>
           Select a list
         </option>
-        {lists.map((list) => (
+        {collections.map((list) => (
           <option key={list.id} value={list.id}>
             {list.title}
           </option>

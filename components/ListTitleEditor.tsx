@@ -1,43 +1,39 @@
 // components/ListTitleEditor.tsx
 "use client";
 
-import { TodoList } from "@/lib/types";
+import { TaskCollection } from "@/lib/types";
 import { useState } from "react";
+import {
+  archiveProjectAction,
+  updateProjectTitleAction,
+} from "@/lib/actions";
 
 export default function ListTitleEditor({
-  list,
+  collection,
   onChange,
 }: {
-  list: TodoList;
+  collection: TaskCollection;
   onChange: () => void;
 }) {
   const [editing, setEditing] = useState(false);
-  const [title, setTitle] = useState(list.title);
+  const [title, setTitle] = useState(collection.title);
 
   async function save() {
     if (!title.trim()) return;
 
-    await fetch(`/api/lists/${list.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title }),
-    });
+    await updateProjectTitleAction(collection.id, title);
 
     setEditing(false);
     onChange();
   }
 
   function cancel() {
-    setTitle(list.title);
+    setTitle(collection.title);
     setEditing(false);
   }
 
-  async function deleteList() {
-    await fetch(`/api/lists/${list.id}`, {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ listId: list.id }),
-    });
+  async function archiveProject() {
+    await archiveProjectAction(collection.id);
     onChange();
   }
 
@@ -57,10 +53,12 @@ export default function ListTitleEditor({
 
   return (
     <div className="flex items-center justify-between">
-      <h2 className="text-xl font-semibold">{list.title}</h2>
+      <h2 className="text-xl font-semibold">{collection.title}</h2>
       <div className="flex gap-2">
         <button onClick={() => setEditing(true)}>Edit</button>
-        <button onClick={deleteList}>Delete</button>
+        {!collection.isSystem && (
+          <button onClick={archiveProject}>Archive</button>
+        )}
       </div>
     </div>
   );

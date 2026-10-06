@@ -1,36 +1,42 @@
 // components/TodoItem.tsx
 "use client";
 
-import { TodoItem as Item } from "@/lib/types";
-import { updateTodoAction, deleteTodoAction } from "@/lib/actions";
+import { Task } from "@/lib/types";
+import { updateTaskAction, deleteTaskAction } from "@/lib/actions";
 import { useState } from "react";
 import { Button } from "./ui/button";
 
 export default function TodoItem({
-  listId,
-  todo,
-  // onChange,
+  collectionId,
+  task,
 }: {
-  listId: string;
-  todo: Item;
-  // onChange: () => void;
+  collectionId: string;
+  task: Task;
 }) {
   const [editing, setEditing] = useState(false);
-  const [title, setTitle] = useState(todo.title);
-  const [targetDate, setTargetDate] = useState(todo.targetDate);
-  const [priority, setPriority] = useState<number | undefined>(todo.priority);
+  const [title, setTitle] = useState(task.title);
+  const [targetDate, setTargetDate] = useState(task.targetDate ?? "");
+  const [priority, setPriority] = useState<number | undefined>(
+    task.priority ?? undefined,
+  );
 
   async function save() {
-    await updateTodoAction(listId, todo.id, { title, targetDate, priority });
+    await updateTaskAction(collectionId, task.id, {
+      title,
+      targetDate: targetDate || null,
+      priority: priority ?? null,
+    });
     setEditing(false);
   }
 
   async function toggleCompleted() {
-    await updateTodoAction(listId, todo.id, { completed: !todo.completed });
+    await updateTaskAction(collectionId, task.id, {
+      status: task.status === "COMPLETED" ? "OPEN" : "COMPLETED",
+    });
   }
 
   async function remove() {
-    await deleteTodoAction(listId, todo.id);
+    await deleteTaskAction(collectionId, task.id);
   }
 
   if (editing) {
@@ -55,6 +61,7 @@ export default function TodoItem({
               placeholder="Priority"
               value={priority === undefined ? "" : priority}
               min={1}
+              max={5}
               onChange={(e) =>
                 setPriority(e.target.value ? Number(e.target.value) : undefined)
               }
@@ -80,19 +87,19 @@ export default function TodoItem({
           <input
             type="checkbox"
             className="accent-green-700"
-            checked={todo.completed}
+            checked={task.status === "COMPLETED"}
             onChange={toggleCompleted}
           />
-          <span className={todo.completed ? "line-through" : ""}>
-            {todo.title}
+          <span className={task.status === "COMPLETED" ? "line-through" : ""}>
+            {task.title}
           </span>
         </div>
 
         <div className="flex gap-2 items-center">
-          <span className="text-sm text-gray-500">{todo.targetDate}</span>
-          {typeof todo.priority === "number" && (
+          <span className="text-sm text-gray-500">{task.targetDate}</span>
+          {typeof task.priority === "number" && (
             <span className="text-sm text-blue-600">
-              Priority: {todo.priority}
+              Priority: {task.priority}
             </span>
           )}
           <Button

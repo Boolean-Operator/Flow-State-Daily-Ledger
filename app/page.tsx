@@ -1,17 +1,22 @@
 // app/page.tsx
-import { getLists } from "@/lib/data";
+import { getTaskCollections } from "@/lib/data";
 import ListManager from "@/components/ListManager";
 
 export default async function HomePage() {
-  // Direct server-side fetch via DAL
-  const lists = await getLists();
+  const collections = await getTaskCollections();
 
   return (
     <main className="p-6 max-w-3xl mx-auto space-y-6">
-      <h1 className="text-3xl font-bold text-gray-900">My Todo Lists</h1>
+      <header className="space-y-1">
+        <h1 className="text-3xl font-bold text-gray-900">
+          Flow-State Daily Ledger
+        </h1>
+        <p className="text-sm text-gray-500">
+          Back Burner and project tasks share one canonical task store.
+        </p>
+      </header>
 
-      {/* Client component for the "New List" form and editing logic */}
-      <ListManager initialLists={lists} />
+      <ListManager initialCollections={collections} />
     </main>
   );
 }

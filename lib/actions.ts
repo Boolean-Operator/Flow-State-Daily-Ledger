@@ -1,55 +1,64 @@
-// lib/actions.ts
 "use server";
 
 import { revalidatePath } from "next/cache";
 import * as dal from "./data";
-import { TodoItem } from "./types";
+import { TaskUpdate } from "./types";
 
-export async function createListAction(title: string) {
-  await dal.createList(title);
-  revalidatePath("/"); // Refreshes the Home Page list
-}
-
-export async function updateListTitleAction(id: string, title: string) {
-  await dal.updateListTitle(id, title);
-  revalidatePath("/"); // Updates the title in the Home Page list
-}
-
-export async function deleteListAction(id: string) {
-  await dal.deleteList(id);
+function revalidateCollection(collectionId?: string) {
   revalidatePath("/");
+  if (collectionId) revalidatePath(`/lists/${collectionId}`);
 }
 
-export async function addTodoAction(
-  listId: string,
+export async function createProjectAction(title: string) {
+  await dal.createProject(title);
+  revalidateCollection();
+}
+
+export async function updateProjectTitleAction(id: string, title: string) {
+  await dal.updateProjectTitle(id, title);
+  revalidateCollection(id);
+}
+
+export async function archiveProjectAction(id: string) {
+  await dal.archiveProject(id);
+  revalidateCollection(id);
+}
+
+export async function addTaskAction(
+  collectionId: string,
   title: string,
   targetDate: string,
   priority?: number,
 ) {
-  await dal.addTodoToList(listId, { title, targetDate, priority });
-  revalidatePath(`/lists/${listId}`);
+  await dal.addTaskToCollection(collectionId, {
+    title,
+    targetDate: targetDate || null,
+    priority: priority ?? null,
+  });
+  revalidateCollection(collectionId);
 }
 
-export async function updateTodoAction(
-  listId: string,
-  todoId: string,
-  updates: Partial<TodoItem>,
+export async function updateTaskAction(
+  collectionId: string,
+  taskId: string,
+  updates: TaskUpdate,
 ) {
-  await dal.updateTodo(listId, todoId, updates);
-  revalidatePath(`/lists/${listId}`);
+  await dal.updateTask(taskId, updates);
+  revalidateCollection(collectionId);
 }
 
-export async function deleteTodoAction(listId: string, todoId: string) {
-  const data = await dal.readData();
-  const list = data.lists.find((l) => l.id === listId);
-  if (list) {
-    list.todos = list.todos.filter((t) => t.id !== todoId);
-    await dal.writeData(data);
-  }
-  revalidatePath(`/lists/${listId}`);
+export async function deleteTaskAction(
+  collectionId: string,
+  taskId: string,
+) {
+  await dal.deleteTask(taskId);
+  revalidateCollection(collectionId);
 }
 
-export async function reorderTodosAction(listId: string, todoIds: string[]) {
-  await dal.reorderTodos(listId, todoIds);
-  revalidatePath(`/lists/${listId}`);
+export async function reorderTasksAction(
+  collectionId: string,
+  taskIds: string[],
+) {
+  await dal.reorderTasks(collectionId, taskIds);
+  revalidateCollection(collectionId);
 }
