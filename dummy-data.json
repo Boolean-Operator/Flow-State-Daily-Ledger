@@ -421,6 +421,607 @@
           "completedAt": "2026-04-27T11:49:52.814Z"
         }
       ]
+    },
+    {
+      "id": "b0000000-0000-4000-8000-000000000000",
+      "title": "Back Burner",
+      "todos": [
+        {
+          "id": "b0000001-0000-4000-8000-000000000001",
+          "title": "Store round dining table",
+          "targetDate": "",
+          "completed": false,
+          "order": 0
+        },
+        {
+          "id": "b0000002-0000-4000-8000-000000000002",
+          "title": "Replace generator carburetor",
+          "targetDate": "",
+          "completed": false,
+          "order": 1
+        },
+        {
+          "id": "b0000003-0000-4000-8000-000000000003",
+          "title": "[Review transcription] Silicon / travel refund",
+          "targetDate": "",
+          "completed": false,
+          "order": 2
+        },
+        {
+          "id": "b0000004-0000-4000-8000-000000000004",
+          "title": "Ice scraper for cars",
+          "targetDate": "",
+          "completed": false,
+          "order": 3
+        },
+        {
+          "id": "b0000005-0000-4000-8000-000000000005",
+          "title": "Drain hot-water heater",
+          "targetDate": "",
+          "completed": false,
+          "order": 4
+        },
+        {
+          "id": "b0000006-0000-4000-8000-000000000006",
+          "title": "Build dog beds",
+          "targetDate": "",
+          "completed": false,
+          "order": 5
+        },
+        {
+          "id": "b0000007-0000-4000-8000-000000000007",
+          "title": "Build Rhino Rack — Kevin",
+          "targetDate": "",
+          "completed": false,
+          "order": 6
+        },
+        {
+          "id": "b0000008-0000-4000-8000-000000000008",
+          "title": "[Build Shed] Lay out footer / foundation",
+          "targetDate": "",
+          "completed": false,
+          "order": 7
+        },
+        {
+          "id": "b0000009-0000-4000-8000-000000000009",
+          "title": "[Build Shed] Dig post footers and install",
+          "targetDate": "",
+          "completed": false,
+          "order": 8
+        },
+        {
+          "id": "b0000010-0000-4000-8000-000000000010",
+          "title": "[Build Shed] Install posts and support framing",
+          "targetDate": "",
+          "completed": false,
+          "order": 9
+        },
+        {
+          "id": "b0000011-0000-4000-8000-000000000011",
+          "title": "Return Xumo to Spectrum",
+          "targetDate": "2026-10-20",
+          "completed": false,
+          "order": 10
+        },
+        {
+          "id": "b0000012-0000-4000-8000-000000000012",
+          "title": "Bass guitar chords",
+          "targetDate": "",
+          "completed": false,
+          "order": 11
+        },
+        {
+          "id": "b0000013-0000-4000-8000-000000000013",
+          "title": "[Review transcription] Coasters — old partner",
+          "targetDate": "",
+          "completed": false,
+          "order": 12
+        },
+        {
+          "id": "b0000014-0000-4000-8000-000000000014",
+          "title": "Shop lights and LED",
+          "targetDate": "",
+          "completed": false,
+          "order": 13
+        },
+        {
+          "id": "b0000015-0000-4000-8000-000000000015",
+          "title": "Canvas tarp (HF)",
+          "targetDate": "",
+          "completed": false,
+          "order": 14
+        },
+        {
+          "id": "b0000016-0000-4000-8000-000000000016",
+          "title": "Mesh tarp (HF)",
+          "targetDate": "",
+          "completed": false,
+          "order": 15
+        },
+        {
+          "id": "b0000017-0000-4000-8000-000000000017",
+          "title": "Test light (HF)",
+          "targetDate": "",
+          "completed": true,
+          "order": 16
+        },
+        {
+          "id": "b0000018-0000-4000-8000-000000000018",
+          "title": "[Review transcription] Picnic table — machine?",
+          "targetDate": "",
+          "completed": false,
+          "order": 17
+        },
+        {
+          "id": "b0000019-0000-4000-8000-000000000019",
+          "title": "[Review status] App Router vs. Pages Router — review comparison",
+          "targetDate": "",
+          "completed": false,
+          "order": 18
+        },
+        {
+          "id": "b0000020-0000-4000-8000-000000000020",
+          "title": "[App Router Upgrade] Prepare for upgrade",
+          "targetDate": "",
+          "completed": false,
+          "order": 19
+        },
+        {
+          "id": "b0000021-0000-4000-8000-000000000021",
+          "title": "[Review transcription] Replace shoe bench with rack",
+          "targetDate": "",
+          "completed": false,
+          "order": 20
+        },
+        {
+          "id": "b0000022-0000-4000-8000-000000000022",
+          "title": "Clean out storage bins in white cubby",
+          "targetDate": "",
+          "completed": false,
+          "order": 21
+        },
+        {
+          "id": "b0000023-0000-4000-8000-000000000023",
+          "title": "Store unused winter coats in hall closet",
+          "targetDate": "",
+          "completed": false,
+          "order": 22
+        },
+        {
+          "id": "b0000024-0000-4000-8000-000000000024",
+          "title": "[Garage Reorganization] Build plywood storage cart",
+          "targetDate": "",
+          "completed": false,
+          "order": 23
+        },
+        {
+          "id": "b0000025-0000-4000-8000-000000000025",
+          "title": "[Garage Reorganization] Move lumber rack",
+          "targetDate": "",
+          "completed": false,
+          "order": 24
+        },
+        {
+          "id": "b0000026-0000-4000-8000-000000000026",
+          "title": "[Garage Reorganization] Move attic stairs",
+          "targetDate": "",
+          "completed": false,
+          "order": 25
+        },
+        {
+          "id": "b0000027-0000-4000-8000-000000000027",
+          "title": "[Garage Reorganization] Repair or replace folding stairs",
+          "targetDate": "",
+          "completed": false,
+          "order": 26
+        },
+        {
+          "id": "b0000028-0000-4000-8000-000000000028",
+          "title": "[Garage Reorganization] Put all equipment on wheels",
+          "targetDate": "",
+          "completed": false,
+          "order": 27
+        },
+        {
+          "id": "b0000029-0000-4000-8000-000000000029",
+          "title": "[Garage Reorganization] Add dust collection",
+          "targetDate": "",
+          "completed": false,
+          "order": 28
+        },
+        {
+          "id": "b0000030-0000-4000-8000-000000000030",
+          "title": "[Garage Reorganization] Choose CNC location",
+          "targetDate": "",
+          "completed": false,
+          "order": 29
+        },
+        {
+          "id": "b0000031-0000-4000-8000-000000000031",
+          "title": "[Garage Reorganization] Assemble CNC",
+          "targetDate": "",
+          "completed": false,
+          "order": 30
+        },
+        {
+          "id": "b0000032-0000-4000-8000-000000000032",
+          "title": "[Garage Reorganization / CNC] Set up software",
+          "targetDate": "",
+          "completed": false,
+          "order": 31
+        },
+        {
+          "id": "b0000033-0000-4000-8000-000000000033",
+          "title": "[Garage Reorganization / CNC] Set up router",
+          "targetDate": "",
+          "completed": false,
+          "order": 32
+        },
+        {
+          "id": "b0000034-0000-4000-8000-000000000034",
+          "title": "[Review transcription] Build front strut base",
+          "targetDate": "",
+          "completed": false,
+          "order": 33
+        },
+        {
+          "id": "b0000035-0000-4000-8000-000000000035",
+          "title": "Replace or repair zero-turn carburetor if necessary",
+          "targetDate": "",
+          "completed": false,
+          "order": 34
+        },
+        {
+          "id": "b0000036-0000-4000-8000-000000000036",
+          "title": "Todo app with AI",
+          "targetDate": "",
+          "completed": false,
+          "order": 35
+        },
+        {
+          "id": "b0000037-0000-4000-8000-000000000037",
+          "title": "Bike rack (2)",
+          "targetDate": "",
+          "completed": false,
+          "order": 36
+        },
+        {
+          "id": "b0000038-0000-4000-8000-000000000038",
+          "title": "Chair rack (2)",
+          "targetDate": "",
+          "completed": false,
+          "order": 37
+        },
+        {
+          "id": "b0000039-0000-4000-8000-000000000039",
+          "title": "Replace old plunger",
+          "targetDate": "",
+          "completed": true,
+          "order": 38
+        },
+        {
+          "id": "b0000040-0000-4000-8000-000000000040",
+          "title": "Caulk tube caps",
+          "targetDate": "",
+          "completed": true,
+          "order": 39
+        },
+        {
+          "id": "b0000041-0000-4000-8000-000000000041",
+          "title": "Repair Silverado seat rocking / sliding",
+          "targetDate": "",
+          "completed": false,
+          "order": 40
+        },
+        {
+          "id": "b0000042-0000-4000-8000-000000000042",
+          "title": "Dining-room window treatment",
+          "targetDate": "",
+          "completed": false,
+          "order": 41
+        },
+        {
+          "id": "b0000043-0000-4000-8000-000000000043",
+          "title": "New office chair",
+          "targetDate": "",
+          "completed": false,
+          "order": 42
+        },
+        {
+          "id": "b0000044-0000-4000-8000-000000000044",
+          "title": "Phone stand for office desk",
+          "targetDate": "",
+          "completed": false,
+          "order": 43
+        },
+        {
+          "id": "b0000045-0000-4000-8000-000000000045",
+          "title": "Get roof-replacement bids (2–3)",
+          "targetDate": "",
+          "completed": false,
+          "order": 44
+        },
+        {
+          "id": "b0000046-0000-4000-8000-000000000046",
+          "title": "Weighted jump rope",
+          "targetDate": "",
+          "completed": false,
+          "order": 45
+        },
+        {
+          "id": "b0000047-0000-4000-8000-000000000047",
+          "title": "Monitor stand for office — 2.5 inches tall",
+          "targetDate": "",
+          "completed": false,
+          "order": 46
+        },
+        {
+          "id": "b0000048-0000-4000-8000-000000000048",
+          "title": "Create Graybill Family Trust",
+          "targetDate": "",
+          "completed": false,
+          "order": 47
+        },
+        {
+          "id": "b0000049-0000-4000-8000-000000000049",
+          "title": "Call Bill Howard",
+          "targetDate": "",
+          "completed": true,
+          "order": 48
+        },
+        {
+          "id": "b0000050-0000-4000-8000-000000000050",
+          "title": "[Learning] AI personalized education — Simon Sinek YouTube",
+          "targetDate": "",
+          "completed": false,
+          "order": 49
+        },
+        {
+          "id": "b0000051-0000-4000-8000-000000000051",
+          "title": "[Learning] AI conversation trick — Simon Sinek YouTube",
+          "targetDate": "",
+          "completed": false,
+          "order": 50
+        },
+        {
+          "id": "b0000052-0000-4000-8000-000000000052",
+          "title": "[Learning] AI models — deep research",
+          "targetDate": "",
+          "completed": false,
+          "order": 51
+        },
+        {
+          "id": "b0000053-0000-4000-8000-000000000053",
+          "title": "[Learning / AI Models] Read as a neophyte",
+          "targetDate": "",
+          "completed": false,
+          "order": 52
+        },
+        {
+          "id": "b0000054-0000-4000-8000-000000000054",
+          "title": "[Learning / AI Models] Read as a critic",
+          "targetDate": "",
+          "completed": false,
+          "order": 53
+        },
+        {
+          "id": "b0000055-0000-4000-8000-000000000055",
+          "title": "[Learning] Review Dan Abramov — Just JavaScript",
+          "targetDate": "",
+          "completed": false,
+          "order": 54
+        },
+        {
+          "id": "b0000056-0000-4000-8000-000000000056",
+          "title": "[Learning] Review design resources",
+          "targetDate": "",
+          "completed": false,
+          "order": 55
+        },
+        {
+          "id": "b0000057-0000-4000-8000-000000000057",
+          "title": "[Learning / Review transcription] Practice Mind GraphQL",
+          "targetDate": "",
+          "completed": false,
+          "order": 56
+        },
+        {
+          "id": "b0000058-0000-4000-8000-000000000058",
+          "title": "[Learning] Check reading-list bookmarks",
+          "targetDate": "",
+          "completed": false,
+          "order": 57
+        },
+        {
+          "id": "b0000059-0000-4000-8000-000000000059",
+          "title": "[Learning] Review TanStack Query",
+          "targetDate": "",
+          "completed": false,
+          "order": 58
+        },
+        {
+          "id": "b0000060-0000-4000-8000-000000000060",
+          "title": "[Learning] Review RHF",
+          "targetDate": "",
+          "completed": false,
+          "order": 59
+        },
+        {
+          "id": "b0000061-0000-4000-8000-000000000061",
+          "title": "[Learning] Chrome DevTools tutorial — debugging",
+          "targetDate": "",
+          "completed": false,
+          "order": 60
+        },
+        {
+          "id": "b0000062-0000-4000-8000-000000000062",
+          "title": "Update music library",
+          "targetDate": "",
+          "completed": false,
+          "order": 61
+        },
+        {
+          "id": "b0000063-0000-4000-8000-000000000063",
+          "title": "[Music Library] Amazon Music downloads",
+          "targetDate": "",
+          "completed": true,
+          "order": 62
+        },
+        {
+          "id": "b0000064-0000-4000-8000-000000000064",
+          "title": "Raise USAA credit limit",
+          "targetDate": "",
+          "completed": false,
+          "order": 63
+        },
+        {
+          "id": "b0000065-0000-4000-8000-000000000065",
+          "title": "Replace Silverado cabin-air filter",
+          "targetDate": "",
+          "completed": false,
+          "order": 64
+        },
+        {
+          "id": "b0000066-0000-4000-8000-000000000066",
+          "title": "[Review transcription] Gretha LLC",
+          "targetDate": "",
+          "completed": false,
+          "order": 65
+        },
+        {
+          "id": "b0000067-0000-4000-8000-000000000067",
+          "title": "[Review transcription] Gretha fall trip",
+          "targetDate": "",
+          "completed": false,
+          "order": 66
+        },
+        {
+          "id": "b0000068-0000-4000-8000-000000000068",
+          "title": "Whitehead fall trip — October 9–12",
+          "targetDate": "2026-10-09",
+          "completed": false,
+          "order": 67
+        },
+        {
+          "id": "b0000069-0000-4000-8000-000000000069",
+          "title": "Shop homeowners insurance",
+          "targetDate": "",
+          "completed": false,
+          "order": 68
+        },
+        {
+          "id": "b0000070-0000-4000-8000-000000000070",
+          "title": "[Learning] Caching",
+          "targetDate": "",
+          "completed": false,
+          "order": 69
+        },
+        {
+          "id": "b0000071-0000-4000-8000-000000000071",
+          "title": "[Learning] Concurrency",
+          "targetDate": "",
+          "completed": false,
+          "order": 70
+        },
+        {
+          "id": "b0000072-0000-4000-8000-000000000072",
+          "title": "[Learning] Computational complexity",
+          "targetDate": "",
+          "completed": false,
+          "order": 71
+        },
+        {
+          "id": "b0000073-0000-4000-8000-000000000073",
+          "title": "[Learning] Dijkstra’s algorithm",
+          "targetDate": "",
+          "completed": false,
+          "order": 72
+        },
+        {
+          "id": "b0000074-0000-4000-8000-000000000074",
+          "title": "[Learning] AI / agentic workflows",
+          "targetDate": "",
+          "completed": false,
+          "order": 73
+        },
+        {
+          "id": "b0000075-0000-4000-8000-000000000075",
+          "title": "[Trailer Work / Review transcription] 4×4 / 6×6 trailer stand — front hitch point",
+          "targetDate": "",
+          "completed": false,
+          "order": 74
+        },
+        {
+          "id": "b0000076-0000-4000-8000-000000000076",
+          "title": "Secure banister with SPAX screws",
+          "targetDate": "",
+          "completed": false,
+          "order": 75
+        },
+        {
+          "id": "b0000077-0000-4000-8000-000000000077",
+          "title": "[Review transcription] Secure rail in bathroom attic with 4-inch SPAX screws",
+          "targetDate": "",
+          "completed": false,
+          "order": 76
+        },
+        {
+          "id": "b0000078-0000-4000-8000-000000000078",
+          "title": "Garage-heater propane jet (HF)",
+          "targetDate": "",
+          "completed": false,
+          "order": 77
+        },
+        {
+          "id": "b0000079-0000-4000-8000-000000000079",
+          "title": "[Mower Maintenance] Relocate fuel pump / relay",
+          "targetDate": "",
+          "completed": false,
+          "order": 78
+        },
+        {
+          "id": "b0000080-0000-4000-8000-000000000080",
+          "title": "Post-hole auger (HF)",
+          "targetDate": "",
+          "completed": false,
+          "order": 79
+        },
+        {
+          "id": "b0000081-0000-4000-8000-000000000081",
+          "title": "Mount hanging ring in garage",
+          "targetDate": "",
+          "completed": false,
+          "order": 80
+        },
+        {
+          "id": "b0000082-0000-4000-8000-000000000082",
+          "title": "7/16-inch threaded rod — 36–40 feet",
+          "targetDate": "",
+          "completed": false,
+          "order": 81
+        },
+        {
+          "id": "b0000083-0000-4000-8000-000000000083",
+          "title": "[Review transcription] HF AC volts and UV light",
+          "targetDate": "",
+          "completed": false,
+          "order": 82
+        },
+        {
+          "id": "b0000084-0000-4000-8000-000000000084",
+          "title": "[Trailer Work] Trailer jack and tongue box (HF)",
+          "targetDate": "",
+          "completed": false,
+          "order": 83
+        },
+        {
+          "id": "b0000085-0000-4000-8000-000000000085",
+          "title": "[Mower Maintenance / Review transcription] 5–7.5 amp fuse",
+          "targetDate": "",
+          "completed": false,
+          "order": 84
+        }
+      ]
     }
   ]
 }
