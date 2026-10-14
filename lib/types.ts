@@ -108,6 +108,12 @@ export interface TaskCollection {
 }
 
 export type DailySection = "WORK" | "PERSONAL";
+export type WrapUpDisposition = "COMPLETE" | "MOVE" | "DEFER" | "CANCEL";
+
+export interface WrapUpDecision {
+  entryId: string;
+  disposition: WrapUpDisposition;
+}
 
 export interface DailyTaskView {
   entry: DailyLedgerEntry;

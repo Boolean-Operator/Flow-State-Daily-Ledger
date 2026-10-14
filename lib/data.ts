@@ -12,7 +12,9 @@ import {
   Task,
   TaskCollection,
   TaskUpdate,
+  WrapUpDecision,
 } from "./types";
+import { getRolloverDateKey } from "./dates";
 
 const DATA_PATH = path.join(process.cwd(), "dummy-data.json");
 
@@ -432,6 +434,18 @@ function findOrCreateDailyLedger(data: DataStore, date: string): DailyLedger {
   return ledger;
 }
 
+function assertActiveLedger(data: DataStore, ledger: DailyLedger) {
+  const activeLedger = data.dailyLedgers
+    .filter((candidate) => candidate.status === "OPEN")
+    .sort(
+      (a, b) =>
+        a.date.localeCompare(b.date) || a.createdAt.localeCompare(b.createdAt),
+    )[0];
+  if (activeLedger && activeLedger.id !== ledger.id) {
+    throw new Error("Finish the active Daily Ledger before starting another day");
+  }
+}
+
 function buildDailyLedgerView(
   data: DataStore,
   ledger: DailyLedger,
@@ -469,14 +483,173 @@ function buildDailyLedgerView(
   };
 }
 
-export async function getOrCreateDailyLedger(
+export async function getOrCreateActiveDailyLedger(
   date: string,
 ): Promise<DailyLedgerView> {
   const data = await readData();
-  const existing = data.dailyLedgers.find((ledger) => ledger.date === date);
+  const activeLedger = data.dailyLedgers
+    .filter((ledger) => ledger.status === "OPEN")
+    .sort(
+      (a, b) =>
+        a.date.localeCompare(b.date) || a.createdAt.localeCompare(b.createdAt),
+    )[0];
+  if (activeLedger) return buildDailyLedgerView(data, activeLedger);
+
+  const existing = data.dailyLedgers.find(
+    (ledger) => ledger.date === date && ledger.status === "OPEN",
+  );
   const ledger = existing ?? findOrCreateDailyLedger(data, date);
   if (!existing) await writeData(data);
   return buildDailyLedgerView(data, ledger);
+}
+
+function assertLedgerOpenForEntry(data: DataStore, entryId: string) {
+  const entry = data.dailyLedgerEntries.find(
+    (candidate) => candidate.id === entryId,
+  );
+  if (!entry) throw new Error("Daily ledger entry not found");
+  const ledger = data.dailyLedgers.find(
+    (candidate) => candidate.id === entry.ledgerId,
+  );
+  if (!ledger) throw new Error("Daily ledger not found");
+  if (ledger.status !== "OPEN") throw new Error("Daily ledger is closed");
+  return entry;
+}
+
+export async function wrapUpDailyLedger(
+  ledgerId: string,
+  currentDate: string,
+  decisions: WrapUpDecision[],
+) {
+  const data = await readData();
+  const ledger = data.dailyLedgers.find((candidate) => candidate.id === ledgerId);
+  if (!ledger) throw new Error("Daily ledger not found");
+  if (ledger.status === "CLOSED") return;
+
+  const ledgerEntries = data.dailyLedgerEntries.filter(
+    (entry) => entry.ledgerId === ledgerId,
+  );
+  const unfinishedEntries = ledgerEntries.filter(
+    (entry) => entry.outcome === "OPEN",
+  );
+  const decisionsByEntryId = new Map(
+    decisions.map((decision) => [decision.entryId, decision.disposition]),
+  );
+  const validDispositions = new Set([
+    "COMPLETE",
+    "MOVE",
+    "DEFER",
+    "CANCEL",
+  ]);
+
+  if (
+    decisionsByEntryId.size !== unfinishedEntries.length ||
+    unfinishedEntries.some((entry) => !decisionsByEntryId.has(entry.id)) ||
+    decisions.some(
+      (decision) =>
+        !unfinishedEntries.some((entry) => entry.id === decision.entryId) ||
+        !validDispositions.has(decision.disposition),
+    )
+  ) {
+    throw new Error("Every unfinished task requires exactly one disposition");
+  }
+
+  const nextDate = getRolloverDateKey(ledger.date, currentDate);
+  const existingNextLedger = data.dailyLedgers.find(
+    (candidate) => candidate.date === nextDate,
+  );
+  if (existingNextLedger?.status === "CLOSED") {
+    throw new Error("The destination Daily Ledger is already closed");
+  }
+  const nextLedger = existingNextLedger ?? findOrCreateDailyLedger(data, nextDate);
+  const now = new Date().toISOString();
+
+  for (const entry of unfinishedEntries) {
+    const task = data.tasks.find((candidate) => candidate.id === entry.taskId);
+    if (!task) throw new Error(`Task not found for Daily Ledger entry ${entry.id}`);
+    const disposition = decisionsByEntryId.get(entry.id);
+
+    if (disposition === "COMPLETE") {
+      entry.outcome = "COMPLETED";
+      task.status = "COMPLETED";
+      task.completedAt = now;
+      task.canceledAt = null;
+    } else if (disposition === "MOVE") {
+      entry.outcome = "MOVED";
+      if (task.status !== "IN_PROGRESS") task.status = "OPEN";
+      task.completedAt = null;
+      task.canceledAt = null;
+      task.area = entry.section;
+      task.targetDate = nextDate;
+
+      const alreadyPlaced = data.dailyLedgerEntries.some(
+        (candidate) =>
+          candidate.ledgerId === nextLedger.id && candidate.taskId === task.id,
+      );
+      if (!alreadyPlaced) {
+        const sortOrder = data.dailyLedgerEntries.filter(
+          (candidate) =>
+            candidate.ledgerId === nextLedger.id &&
+            candidate.section === entry.section,
+        ).length;
+        data.dailyLedgerEntries.push({
+          id: crypto.randomUUID(),
+          ledgerId: nextLedger.id,
+          taskId: task.id,
+          section: entry.section,
+          sortOrder,
+          outcome: "OPEN",
+          createdAt: now,
+        });
+      }
+    } else if (disposition === "DEFER") {
+      entry.outcome = "DEFERRED";
+      task.status = "OPEN";
+      task.completedAt = null;
+      task.canceledAt = null;
+      task.targetDate = null;
+    } else if (disposition === "CANCEL") {
+      entry.outcome = "CANCELED";
+      task.status = "CANCELED";
+      task.completedAt = null;
+      task.canceledAt = now;
+    }
+  }
+
+  const existingStandupTaskIds = new Set(
+    data.standupItems
+      .filter((item) => item.ledgerId === nextLedger.id && item.taskId)
+      .map((item) => item.taskId),
+  );
+  let nextStandupOrder = data.standupItems.filter(
+    (item) => item.ledgerId === nextLedger.id,
+  ).length;
+
+  for (const entry of ledgerEntries
+    .filter(
+      (candidate) =>
+        candidate.section === "WORK" && candidate.outcome === "COMPLETED",
+    )
+    .sort((a, b) => a.sortOrder - b.sortOrder)) {
+    if (existingStandupTaskIds.has(entry.taskId)) continue;
+    const task = data.tasks.find((candidate) => candidate.id === entry.taskId);
+    if (!task) throw new Error(`Task not found for Daily Ledger entry ${entry.id}`);
+    data.standupItems.push({
+      id: crypto.randomUUID(),
+      ledgerId: nextLedger.id,
+      taskId: task.id,
+      summary: task.title,
+      detail: null,
+      sortOrder: nextStandupOrder,
+      createdAt: now,
+    });
+    existingStandupTaskIds.add(task.id);
+    nextStandupOrder += 1;
+  }
+
+  ledger.status = "CLOSED";
+  ledger.closedAt = now;
+  await writeData(data);
 }
 
 export async function getAvailableTasksForLedger(
@@ -526,6 +699,7 @@ export async function createDailyTask(
 
   const ledger = findOrCreateDailyLedger(data, date);
   if (ledger.status !== "OPEN") throw new Error("Daily ledger is closed");
+  assertActiveLedger(data, ledger);
   const sortOrder = data.dailyLedgerEntries.filter(
     (entry) => entry.ledgerId === ledger.id && entry.section === section,
   ).length;
@@ -574,6 +748,7 @@ export async function addTaskToDailyLedger(
   const data = await readData();
   const ledger = findOrCreateDailyLedger(data, date);
   if (ledger.status !== "OPEN") throw new Error("Daily ledger is closed");
+  assertActiveLedger(data, ledger);
   const task = data.tasks.find((candidate) => candidate.id === taskId);
   if (!task) throw new Error("Task not found");
   if (task.status !== "OPEN" && task.status !== "IN_PROGRESS") {
@@ -608,10 +783,7 @@ export async function setDailyTaskCompleted(
   completed: boolean,
 ) {
   const data = await readData();
-  const entry = data.dailyLedgerEntries.find(
-    (candidate) => candidate.id === entryId,
-  );
-  if (!entry) throw new Error("Daily ledger entry not found");
+  const entry = assertLedgerOpenForEntry(data, entryId);
   const task = data.tasks.find((candidate) => candidate.id === entry.taskId);
   if (!task) throw new Error("Task not found");
 
@@ -624,10 +796,7 @@ export async function setDailyTaskCompleted(
 
 export async function updateDailyTaskTitle(entryId: string, title: string) {
   const data = await readData();
-  const entry = data.dailyLedgerEntries.find(
-    (candidate) => candidate.id === entryId,
-  );
-  if (!entry) throw new Error("Daily ledger entry not found");
+  const entry = assertLedgerOpenForEntry(data, entryId);
   const task = data.tasks.find((candidate) => candidate.id === entry.taskId);
   const normalizedTitle = title.trim();
   if (!task) throw new Error("Task not found");
@@ -641,10 +810,7 @@ export async function moveDailyEntry(
   section: DailySection,
 ) {
   const data = await readData();
-  const entry = data.dailyLedgerEntries.find(
-    (candidate) => candidate.id === entryId,
-  );
-  if (!entry) throw new Error("Daily ledger entry not found");
+  const entry = assertLedgerOpenForEntry(data, entryId);
   const task = data.tasks.find((candidate) => candidate.id === entry.taskId);
   if (!task) throw new Error("Task not found");
 
@@ -659,6 +825,7 @@ export async function moveDailyEntry(
 
 export async function removeDailyEntry(entryId: string) {
   const data = await readData();
+  assertLedgerOpenForEntry(data, entryId);
   const nextEntries = data.dailyLedgerEntries.filter(
     (entry) => entry.id !== entryId,
   );
@@ -675,6 +842,9 @@ export async function reorderDailyEntries(
   entryIds: string[],
 ) {
   const data = await readData();
+  const ledger = data.dailyLedgers.find((candidate) => candidate.id === ledgerId);
+  if (!ledger) throw new Error("Daily ledger not found");
+  if (ledger.status !== "OPEN") throw new Error("Daily ledger is closed");
   const sectionEntryIds = data.dailyLedgerEntries
     .filter(
       (entry) => entry.ledgerId === ledgerId && entry.section === section,
@@ -721,6 +891,11 @@ export async function updateStandupItem(itemId: string, content: string) {
   const item = data.standupItems.find((candidate) => candidate.id === itemId);
   const normalizedContent = content.trim();
   if (!item) throw new Error("Standup item not found");
+  const ledger = data.dailyLedgers.find(
+    (candidate) => candidate.id === item.ledgerId,
+  );
+  if (!ledger) throw new Error("Daily ledger not found");
+  if (ledger.status !== "OPEN") throw new Error("Daily ledger is closed");
   if (!normalizedContent) throw new Error("Standup content is required");
 
   item.summary = normalizedContent;
@@ -730,6 +905,13 @@ export async function updateStandupItem(itemId: string, content: string) {
 
 export async function deleteStandupItem(itemId: string) {
   const data = await readData();
+  const item = data.standupItems.find((candidate) => candidate.id === itemId);
+  if (!item) throw new Error("Standup item not found");
+  const ledger = data.dailyLedgers.find(
+    (candidate) => candidate.id === item.ledgerId,
+  );
+  if (!ledger) throw new Error("Daily ledger not found");
+  if (ledger.status !== "OPEN") throw new Error("Daily ledger is closed");
   const nextItems = data.standupItems.filter((item) => item.id !== itemId);
   if (nextItems.length === data.standupItems.length) {
     throw new Error("Standup item not found");

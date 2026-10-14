@@ -6,18 +6,10 @@ export default async function CollectionsPage() {
 
   return (
     <main className="mx-auto min-h-screen max-w-3xl space-y-6 p-4 sm:p-6">
-      <header>
-        <div className="space-y-1">
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
-            Flow-State Daily Ledger
-          </p>
-          <h1 className="text-3xl font-bold text-gray-900">
-            Back Burner & Projects
-          </h1>
-          <p className="text-sm text-gray-500">
-            Organize future work without crowding today.
-          </p>
-        </div>
+      <header className="px-1 sm:px-2">
+        <h1 className="text-xl font-bold tracking-tight text-slate-950 sm:text-2xl">
+          Back Burner & Projects
+        </h1>
       </header>
 
       <ListManager initialCollections={collections} />

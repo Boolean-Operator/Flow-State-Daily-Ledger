@@ -3113,7 +3113,7 @@
       "id": "e5d2b03c-1c43-4b9c-95e2-9c7231548d61",
       "title": "To Do: Create refinement ticket to implement Mobile UX upgrades. Related:  DIGDEV-6749",
       "description": null,
-      "status": "OPEN",
+      "status": "COMPLETED",
       "area": "WORK",
       "projectId": null,
       "parentTaskId": null,
@@ -3123,7 +3123,7 @@
       "targetDate": "2026-10-06",
       "sortOrder": 86,
       "createdAt": "2026-10-06T18:32:40.238Z",
-      "completedAt": null,
+      "completedAt": "2026-10-07T18:48:20.956Z",
       "canceledAt": null,
       "source": "APP",
       "sourceListId": null,
@@ -3135,17 +3135,17 @@
       "id": "94439668-e832-4a16-b906-ab6d487c2003",
       "title": "DIGDEV - 4781 Investigate and triage",
       "description": null,
-      "status": "OPEN",
+      "status": "COMPLETED",
       "area": "WORK",
       "projectId": null,
       "parentTaskId": null,
       "priority": null,
       "calculatedUrgency": null,
       "hardDueDate": null,
-      "targetDate": "2026-10-06",
+      "targetDate": "2026-10-09",
       "sortOrder": 87,
       "createdAt": "2026-10-06T18:34:02.558Z",
-      "completedAt": null,
+      "completedAt": "2026-10-14T14:21:23.750Z",
       "canceledAt": null,
       "source": "APP",
       "sourceListId": null,
@@ -3174,14 +3174,123 @@
       "sourceListTitle": null,
       "sourceOrder": null,
       "sourcePriority": null
+    },
+    {
+      "id": "504e0c7f-e985-46ca-bb3f-de12f9f37249",
+      "title": "Add daily wrap up function to FSDL",
+      "description": null,
+      "status": "OPEN",
+      "area": "WORK",
+      "projectId": null,
+      "parentTaskId": null,
+      "priority": null,
+      "calculatedUrgency": null,
+      "hardDueDate": null,
+      "targetDate": "2026-10-14",
+      "sortOrder": 89,
+      "createdAt": "2026-10-07T18:49:17.645Z",
+      "completedAt": null,
+      "canceledAt": null,
+      "source": "APP",
+      "sourceListId": null,
+      "sourceListTitle": null,
+      "sourceOrder": null,
+      "sourcePriority": null
+    },
+    {
+      "id": "cab33b30-157d-4a0e-a0cb-20b1f87b97b1",
+      "title": "Sam's - gas and groceries",
+      "description": null,
+      "status": "COMPLETED",
+      "area": "PERSONAL",
+      "projectId": null,
+      "parentTaskId": null,
+      "priority": null,
+      "calculatedUrgency": null,
+      "hardDueDate": null,
+      "targetDate": "2026-10-07",
+      "sortOrder": 90,
+      "createdAt": "2026-10-07T18:50:29.235Z",
+      "completedAt": "2026-10-09T20:11:02.440Z",
+      "canceledAt": null,
+      "source": "APP",
+      "sourceListId": null,
+      "sourceListTitle": null,
+      "sourceOrder": null,
+      "sourcePriority": null
+    },
+    {
+      "id": "45ac7b28-b564-4b16-b0ba-932e42fb3ab9",
+      "title": "Automotive Planning session 2027 - 0930-1130",
+      "description": null,
+      "status": "COMPLETED",
+      "area": "WORK",
+      "projectId": null,
+      "parentTaskId": null,
+      "priority": null,
+      "calculatedUrgency": null,
+      "hardDueDate": null,
+      "targetDate": "2026-10-07",
+      "sortOrder": 91,
+      "createdAt": "2026-10-07T18:50:52.134Z",
+      "completedAt": "2026-10-07T18:51:54.344Z",
+      "canceledAt": null,
+      "source": "APP",
+      "sourceListId": null,
+      "sourceListTitle": null,
+      "sourceOrder": null,
+      "sourcePriority": null
+    },
+    {
+      "id": "f8ee0a35-992d-44ff-ba67-8e5de41a33a2",
+      "title": "Lowes - nylock nuts for trailer",
+      "description": null,
+      "status": "OPEN",
+      "area": "PERSONAL",
+      "projectId": null,
+      "parentTaskId": null,
+      "priority": null,
+      "calculatedUrgency": null,
+      "hardDueDate": null,
+      "targetDate": "2026-10-14",
+      "sortOrder": 92,
+      "createdAt": "2026-10-07T18:54:30.659Z",
+      "completedAt": null,
+      "canceledAt": null,
+      "source": "APP",
+      "sourceListId": null,
+      "sourceListTitle": null,
+      "sourceOrder": null,
+      "sourcePriority": null
     }
   ],
   "dailyLedgers": [
     {
       "id": "0d8e4819-955f-4ead-8437-e6d248c4ead6",
       "date": "2026-10-06",
-      "status": "OPEN",
+      "status": "CLOSED",
       "createdAt": "2026-10-06T15:43:29.142Z",
+      "closedAt": "2026-10-07T18:48:20.956Z"
+    },
+    {
+      "id": "e06ce746-61f2-44cc-b4a2-587d2562f267",
+      "date": "2026-10-07",
+      "status": "CLOSED",
+      "createdAt": "2026-10-07T16:56:23.042Z",
+      "closedAt": "2026-10-09T20:11:02.440Z"
+    },
+    {
+      "id": "be57973e-747e-46ba-a05b-a7e332fb9b13",
+      "date": "2026-10-09",
+      "status": "CLOSED",
+      "createdAt": "2026-10-09T20:11:02.440Z",
+      "closedAt": "2026-10-14T14:21:23.750Z"
+    },
+    {
+      "id": "f6a973e6-b037-4ee2-abd4-e3d413816558",
+      "date": "2026-10-14",
+      "status": "OPEN",
+      "createdAt": "2026-10-14T14:21:23.750Z",
       "closedAt": null
     }
   ],
@@ -3201,7 +3310,7 @@
       "taskId": "e5d2b03c-1c43-4b9c-95e2-9c7231548d61",
       "section": "WORK",
       "sortOrder": 1,
-      "outcome": "OPEN",
+      "outcome": "COMPLETED",
       "createdAt": "2026-10-06T18:32:40.238Z"
     },
     {
@@ -3210,8 +3319,98 @@
       "taskId": "94439668-e832-4a16-b906-ab6d487c2003",
       "section": "WORK",
       "sortOrder": 2,
-      "outcome": "OPEN",
+      "outcome": "MOVED",
       "createdAt": "2026-10-06T18:34:02.558Z"
+    },
+    {
+      "id": "4156164f-d6d6-4487-8c11-6d3f53e70879",
+      "ledgerId": "e06ce746-61f2-44cc-b4a2-587d2562f267",
+      "taskId": "94439668-e832-4a16-b906-ab6d487c2003",
+      "section": "WORK",
+      "sortOrder": 0,
+      "outcome": "MOVED",
+      "createdAt": "2026-10-07T18:48:20.956Z"
+    },
+    {
+      "id": "d8069ebc-78fc-4f40-82a2-d8b787266946",
+      "ledgerId": "e06ce746-61f2-44cc-b4a2-587d2562f267",
+      "taskId": "504e0c7f-e985-46ca-bb3f-de12f9f37249",
+      "section": "WORK",
+      "sortOrder": 1,
+      "outcome": "MOVED",
+      "createdAt": "2026-10-07T18:49:17.645Z"
+    },
+    {
+      "id": "6a08f38a-3188-4956-aa0b-fac1dce796d4",
+      "ledgerId": "e06ce746-61f2-44cc-b4a2-587d2562f267",
+      "taskId": "cab33b30-157d-4a0e-a0cb-20b1f87b97b1",
+      "section": "PERSONAL",
+      "sortOrder": 0,
+      "outcome": "COMPLETED",
+      "createdAt": "2026-10-07T18:50:29.235Z"
+    },
+    {
+      "id": "fa3fd418-21a8-444a-945f-f4ca388acadf",
+      "ledgerId": "e06ce746-61f2-44cc-b4a2-587d2562f267",
+      "taskId": "45ac7b28-b564-4b16-b0ba-932e42fb3ab9",
+      "section": "WORK",
+      "sortOrder": 2,
+      "outcome": "COMPLETED",
+      "createdAt": "2026-10-07T18:50:52.134Z"
+    },
+    {
+      "id": "53f76bc1-8c49-455a-ad9d-644355200883",
+      "ledgerId": "e06ce746-61f2-44cc-b4a2-587d2562f267",
+      "taskId": "f8ee0a35-992d-44ff-ba67-8e5de41a33a2",
+      "section": "PERSONAL",
+      "sortOrder": 1,
+      "outcome": "MOVED",
+      "createdAt": "2026-10-07T18:54:30.659Z"
+    },
+    {
+      "id": "e1454f31-b9cf-407b-9895-23dc5775f294",
+      "ledgerId": "be57973e-747e-46ba-a05b-a7e332fb9b13",
+      "taskId": "94439668-e832-4a16-b906-ab6d487c2003",
+      "section": "WORK",
+      "sortOrder": 0,
+      "outcome": "COMPLETED",
+      "createdAt": "2026-10-09T20:11:02.440Z"
+    },
+    {
+      "id": "3c596d42-ac57-485e-a2d3-ec8ad5abd3ea",
+      "ledgerId": "be57973e-747e-46ba-a05b-a7e332fb9b13",
+      "taskId": "504e0c7f-e985-46ca-bb3f-de12f9f37249",
+      "section": "WORK",
+      "sortOrder": 1,
+      "outcome": "MOVED",
+      "createdAt": "2026-10-09T20:11:02.440Z"
+    },
+    {
+      "id": "180f2107-71f7-4170-ae23-93a538a4d7a9",
+      "ledgerId": "be57973e-747e-46ba-a05b-a7e332fb9b13",
+      "taskId": "f8ee0a35-992d-44ff-ba67-8e5de41a33a2",
+      "section": "PERSONAL",
+      "sortOrder": 0,
+      "outcome": "MOVED",
+      "createdAt": "2026-10-09T20:11:02.440Z"
+    },
+    {
+      "id": "9d7aa967-b59b-457d-aef1-da6f4e294f37",
+      "ledgerId": "f6a973e6-b037-4ee2-abd4-e3d413816558",
+      "taskId": "504e0c7f-e985-46ca-bb3f-de12f9f37249",
+      "section": "WORK",
+      "sortOrder": 0,
+      "outcome": "OPEN",
+      "createdAt": "2026-10-14T14:21:23.750Z"
+    },
+    {
+      "id": "6847f787-7562-44c4-86c3-35e999876ced",
+      "ledgerId": "f6a973e6-b037-4ee2-abd4-e3d413816558",
+      "taskId": "f8ee0a35-992d-44ff-ba67-8e5de41a33a2",
+      "section": "PERSONAL",
+      "sortOrder": 0,
+      "outcome": "OPEN",
+      "createdAt": "2026-10-14T14:21:23.750Z"
     }
   ],
   "radarEntries": [],
@@ -3242,6 +3441,24 @@
       "detail": null,
       "sortOrder": 2,
       "createdAt": "2026-10-06T16:00:00.000Z"
+    },
+    {
+      "id": "fd6e033a-cd10-467a-b3c3-b7a75bedf5f4",
+      "ledgerId": "be57973e-747e-46ba-a05b-a7e332fb9b13",
+      "taskId": "45ac7b28-b564-4b16-b0ba-932e42fb3ab9",
+      "summary": "Automotive Planning session 2027 - 0930-1130",
+      "detail": null,
+      "sortOrder": 0,
+      "createdAt": "2026-10-09T20:11:02.440Z"
+    },
+    {
+      "id": "d3948a90-b9db-403c-9619-07f4788560f0",
+      "ledgerId": "f6a973e6-b037-4ee2-abd4-e3d413816558",
+      "taskId": "94439668-e832-4a16-b906-ab6d487c2003",
+      "summary": "DIGDEV - 4781 Investigate and triage",
+      "detail": null,
+      "sortOrder": 0,
+      "createdAt": "2026-10-14T14:21:23.750Z"
     }
   ]
 }

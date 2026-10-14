@@ -1,6 +1,14 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export default function AppHeader() {
+  const pathname = usePathname();
+  const todayIsActive = pathname === "/";
+  const backBurnerIsActive =
+    pathname === "/collections" || pathname.startsWith("/lists/");
+
   return (
     <header className="border-b border-slate-200 bg-white/85 backdrop-blur">
       <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-2 sm:px-6">
@@ -25,20 +33,30 @@ export default function AppHeader() {
             </svg>
           </span>
           <span className="truncate text-sm font-bold tracking-tight sm:text-base">
-            Flow-State
+            Flow State Daily Ledger
           </span>
         </Link>
 
         <nav aria-label="Primary navigation" className="flex items-center gap-1">
           <Link
             href="/"
-            className="rounded-full px-2.5 py-1.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950"
+            aria-current={todayIsActive ? "page" : undefined}
+            className={`rounded-full border px-2.5 py-1.5 text-sm font-semibold transition hover:bg-slate-100 hover:text-slate-950 ${
+              todayIsActive
+                ? "border-slate-300 bg-slate-50 text-slate-950 shadow-sm"
+                : "border-transparent text-slate-600"
+            }`}
           >
             Today
           </Link>
           <Link
             href="/collections"
-            className="rounded-full px-2.5 py-1.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950"
+            aria-current={backBurnerIsActive ? "page" : undefined}
+            className={`rounded-full border px-2.5 py-1.5 text-sm font-semibold transition hover:bg-slate-100 hover:text-slate-950 ${
+              backBurnerIsActive
+                ? "border-slate-300 bg-slate-50 text-slate-950 shadow-sm"
+                : "border-transparent text-slate-600"
+            }`}
           >
             Back Burner
           </Link>

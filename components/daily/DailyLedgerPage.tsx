@@ -3,14 +3,18 @@
 import { FormEvent, useState, useTransition } from "react";
 import {
   ArrowDown,
+  ArrowRight,
   ArrowUp,
+  CalendarCheck2,
   ChevronDown,
   Inbox,
   Pencil,
   Plus,
   RotateCcw,
+  TriangleAlert,
   X,
 } from "lucide-react";
+import WrapUpFlow from "@/components/daily/WrapUpFlow";
 import {
   addStandupItemAction,
   addTaskToDailyLedgerAction,
@@ -30,6 +34,7 @@ import {
   DailyTaskView,
   StandupItem,
 } from "@/lib/types";
+import { formatLedgerDate } from "@/lib/dates";
 
 const sectionStyles = {
   WORK: {
@@ -418,15 +423,20 @@ function StandupSection({
 export default function DailyLedgerPage({
   ledger,
   availableTasks,
+  todayDate,
 }: {
   ledger: DailyLedgerView;
   availableTasks: AvailableTaskView[];
+  todayDate: string;
 }) {
   const [title, setTitle] = useState("");
+  const [wrappingUp, setWrappingUp] = useState(false);
+  const [captureExpanded, setCaptureExpanded] = useState(false);
   const [captureSection, setCaptureSection] = useState<DailySection>("WORK");
   const [selectedTaskId, setSelectedTaskId] = useState("");
   const [pullSection, setPullSection] = useState<DailySection>("WORK");
   const [isPending, startTransition] = useTransition();
+  const isRecovery = ledger.ledger.date < todayDate;
 
   function addNewTask(event: FormEvent) {
     event.preventDefault();
@@ -434,7 +444,13 @@ export default function DailyLedgerPage({
     startTransition(async () => {
       await createDailyTaskAction(ledger.ledger.date, captureSection, title);
       setTitle("");
+      setCaptureExpanded(false);
     });
+  }
+
+  function closeCapture() {
+    setTitle("");
+    setCaptureExpanded(false);
   }
 
   function pullExistingTask(event: FormEvent) {
@@ -450,49 +466,119 @@ export default function DailyLedgerPage({
     });
   }
 
+  if (wrappingUp) {
+    return (
+      <WrapUpFlow
+        ledger={ledger}
+        todayDate={todayDate}
+        onCancel={() => setWrappingUp(false)}
+      />
+    );
+  }
+
   return (
     <div className="space-y-5">
+      {isRecovery && (
+        <section className="rounded-xl border border-orange-300 bg-orange-50 p-4 shadow-sm">
+          <div className="flex items-start gap-3">
+            <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-orange-100 text-orange-700">
+              <TriangleAlert className="size-4" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="font-bold text-orange-950">
+                This ledger still needs to be wrapped up
+              </p>
+              <p className="mt-1 text-sm leading-5 text-orange-800">
+                Finish {formatLedgerDate(ledger.ledger.date)} before planning
+                today. Its unfinished tasks will remain here until you decide
+                what happens next.
+              </p>
+              <button
+                type="button"
+                onClick={() => setWrappingUp(true)}
+                className="mt-3 inline-flex items-center gap-2 rounded-lg bg-orange-700 px-3.5 py-2 text-sm font-bold text-white hover:bg-orange-800"
+              >
+                <CalendarCheck2 className="size-4" />
+                Finish previous day
+              </button>
+            </div>
+          </div>
+        </section>
+      )}
+
       <StandupSection
         ledgerId={ledger.ledger.id}
         items={ledger.standupItems}
       />
 
-      <form
-        onSubmit={addNewTask}
-        className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm"
-      >
-        <div className="mb-3 grid grid-cols-2 rounded-lg bg-slate-100 p-1">
-          {(["WORK", "PERSONAL"] as DailySection[]).map((section) => (
+      {!isRecovery && (captureExpanded ? (
+        <form
+          onSubmit={addNewTask}
+          className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm"
+        >
+          <div className="mb-3 flex items-center gap-2">
+            <div className="grid min-w-0 flex-1 grid-cols-2 rounded-lg bg-slate-100 p-1">
+              {(["WORK", "PERSONAL"] as DailySection[]).map((section) => (
+                <button
+                  key={section}
+                  type="button"
+                  onClick={() => setCaptureSection(section)}
+                  className={`rounded-md px-3 py-2 text-sm font-semibold transition ${
+                    captureSection === section
+                      ? "bg-white text-slate-950 shadow-sm"
+                      : "text-slate-500"
+                  }`}
+                >
+                  {sectionStyles[section].shortLabel}
+                </button>
+              ))}
+            </div>
             <button
-              key={section}
               type="button"
-              onClick={() => setCaptureSection(section)}
-              className={`rounded-md px-3 py-2 text-sm font-semibold transition ${
-                captureSection === section
-                  ? "bg-white text-slate-950 shadow-sm"
-                  : "text-slate-500"
-              }`}
+              onClick={closeCapture}
+              aria-label="Cancel adding task"
+              className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
             >
-              {sectionStyles[section].shortLabel}
+              <X className="size-5" />
             </button>
-          ))}
-        </div>
-        <div className="flex gap-2">
-          <input
-            value={title}
-            onChange={(event) => setTitle(event.target.value)}
-            placeholder={`Add a ${sectionStyles[captureSection].shortLabel.toLowerCase()} task…`}
-            className="min-w-0 flex-1 rounded-lg border border-slate-300 px-3 py-2.5 text-base outline-none focus:border-slate-500"
-          />
-          <button
-            disabled={isPending || !title.trim()}
-            className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-slate-900 text-white disabled:opacity-40"
-            aria-label="Add task"
-          >
-            <Plus className="size-5" />
-          </button>
-        </div>
-      </form>
+          </div>
+          <div className="flex gap-2">
+            <input
+              autoFocus
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Escape") closeCapture();
+              }}
+              placeholder={`Add a ${sectionStyles[captureSection].shortLabel.toLowerCase()} task…`}
+              className="min-w-0 flex-1 rounded-lg border border-slate-300 px-3 py-2.5 text-base outline-none focus:border-slate-500"
+            />
+            <button
+              disabled={isPending || !title.trim()}
+              className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-slate-900 text-white disabled:opacity-40"
+              aria-label="Add task"
+            >
+              <Plus className="size-5" />
+            </button>
+          </div>
+        </form>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setCaptureExpanded(true)}
+          className="flex w-full items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-left shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
+        >
+          <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-slate-900 text-white">
+            <Plus className="size-4" />
+          </span>
+          <span className="min-w-0 flex-1 text-sm font-semibold text-slate-700">
+            Add a task…
+          </span>
+          <span className="text-xs font-medium text-slate-400">
+            {sectionStyles[captureSection].shortLabel}
+          </span>
+        </button>
+      ))}
 
       <DailySectionCard
         section="WORK"
@@ -505,7 +591,30 @@ export default function DailyLedgerPage({
         ledgerId={ledger.ledger.id}
       />
 
-      <details className="group rounded-xl border border-slate-200 bg-white">
+      {!isRecovery && (
+        <button
+          type="button"
+          onClick={() => setWrappingUp(true)}
+          className="flex w-full items-center justify-between gap-3 rounded-xl border border-slate-300 bg-white px-4 py-3 text-left shadow-sm transition hover:border-slate-400 hover:bg-slate-50"
+        >
+          <span className="flex items-center gap-3">
+            <span className="flex size-8 items-center justify-center rounded-full bg-slate-900 text-white">
+              <CalendarCheck2 className="size-4" />
+            </span>
+            <span>
+              <span className="block text-sm font-bold text-slate-900">
+                Wrap up day
+              </span>
+              <span className="block text-xs text-slate-500">
+                Resolve unfinished work and prepare the next ledger
+              </span>
+            </span>
+          </span>
+          <ArrowRight className="size-4 shrink-0 text-slate-400" />
+        </button>
+      )}
+
+      {!isRecovery && <details className="group rounded-xl border border-slate-200 bg-white">
         <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 font-semibold text-slate-800">
           <span className="flex items-center gap-2">
             <Inbox className="size-4 text-slate-500" />
@@ -548,7 +657,7 @@ export default function DailyLedgerPage({
             </button>
           </div>
         </form>
-      </details>
+      </details>}
     </div>
   );
 }

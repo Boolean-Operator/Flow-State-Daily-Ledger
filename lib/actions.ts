@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import * as dal from "./data";
-import { DailySection, TaskUpdate } from "./types";
+import { DailySection, TaskUpdate, WrapUpDecision } from "./types";
+import { getTodayDateKey } from "./dates";
 
 function revalidateCollection(collectionId?: string) {
   revalidatePath("/");
@@ -120,6 +121,14 @@ export async function addTaskToDailyLedgerAction(
   section: DailySection,
 ) {
   await dal.addTaskToDailyLedger(date, taskId, section);
+  revalidateDailyLedger();
+}
+
+export async function wrapUpDailyLedgerAction(
+  ledgerId: string,
+  decisions: WrapUpDecision[],
+) {
+  await dal.wrapUpDailyLedger(ledgerId, getTodayDateKey(), decisions);
   revalidateDailyLedger();
 }
 

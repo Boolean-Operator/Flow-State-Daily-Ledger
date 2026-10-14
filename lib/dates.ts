@@ -20,3 +20,14 @@ export function formatLedgerDate(dateKey: string): string {
     year: "numeric",
   }).format(new Date(`${dateKey}T12:00:00Z`));
 }
+
+export function getRolloverDateKey(
+  ledgerDate: string,
+  currentDate: string,
+): string {
+  if (currentDate > ledgerDate) return currentDate;
+
+  const nextDate = new Date(`${ledgerDate}T12:00:00Z`);
+  nextDate.setUTCDate(nextDate.getUTCDate() + 1);
+  return nextDate.toISOString().slice(0, 10);
+}
