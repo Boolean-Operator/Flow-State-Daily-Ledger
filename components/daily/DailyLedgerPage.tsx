@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState, useTransition } from "react";
+import { FormEvent, useEffect, useState, useTransition } from "react";
 import {
   ArrowDown,
   ArrowRight,
@@ -23,6 +23,8 @@ import {
   moveDailyEntryAction,
   removeDailyEntryAction,
   reorderDailyEntriesAction,
+  reorderStandupItemsAction,
+  restoreStandupItemAction,
   setDailyTaskCompletedAction,
   updateDailyTaskTitleAction,
   updateStandupItemAction,
@@ -256,7 +258,21 @@ function DailySectionCard({
   );
 }
 
-function StandupItemRow({ item }: { item: StandupItem }) {
+function StandupItemRow({
+  item,
+  canMoveUp,
+  canMoveDown,
+  isOrderPending,
+  onDelete,
+  onMove,
+}: {
+  item: StandupItem;
+  canMoveUp: boolean;
+  canMoveDown: boolean;
+  isOrderPending: boolean;
+  onDelete: (itemId: string) => Promise<void>;
+  onMove: (itemId: string, direction: -1 | 1) => void;
+}) {
   const initialContent = item.detail
     ? `${item.summary}\n${item.detail}`
     : item.summary;
@@ -320,10 +336,28 @@ function StandupItemRow({ item }: { item: StandupItem }) {
           </button>
           <button
             type="button"
+            disabled={!canMoveUp || isOrderPending || isPending}
+            onClick={() => onMove(item.id, -1)}
+            aria-label="Move standup item up"
+            className="rounded p-1.5 text-amber-700/50 hover:bg-amber-100 hover:text-amber-800 disabled:opacity-20"
+          >
+            <ArrowUp className="size-3.5" />
+          </button>
+          <button
+            type="button"
+            disabled={!canMoveDown || isOrderPending || isPending}
+            onClick={() => onMove(item.id, 1)}
+            aria-label="Move standup item down"
+            className="rounded p-1.5 text-amber-700/50 hover:bg-amber-100 hover:text-amber-800 disabled:opacity-20"
+          >
+            <ArrowDown className="size-3.5" />
+          </button>
+          <button
+            type="button"
             disabled={isPending}
             onClick={() =>
               startTransition(async () => {
-                await deleteStandupItemAction(item.id);
+                await onDelete(item.id);
               })
             }
             aria-label="Delete standup item"
@@ -346,7 +380,22 @@ function StandupSection({
 }) {
   const [content, setContent] = useState("");
   const [expanded, setExpanded] = useState(true);
+  const [undoCandidate, setUndoCandidate] = useState<StandupItem | null>(null);
+  const [undoError, setUndoError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [isOrderPending, startOrderTransition] = useTransition();
+  const [isUndoPending, startUndoTransition] = useTransition();
+
+  useEffect(() => {
+    if ((!undoCandidate && !undoError) || isUndoPending) return;
+
+    const timeoutId = window.setTimeout(() => {
+      setUndoCandidate(null);
+      setUndoError(null);
+    }, 7000);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [isUndoPending, undoCandidate, undoError]);
 
   function addItem(event: FormEvent) {
     event.preventDefault();
@@ -354,6 +403,58 @@ function StandupSection({
     startTransition(async () => {
       await addStandupItemAction(ledgerId, content);
       setContent("");
+    });
+  }
+
+  async function deleteItem(itemId: string) {
+    try {
+      const deletedItem = await deleteStandupItemAction(itemId);
+      setUndoCandidate(deletedItem);
+      setUndoError(null);
+    } catch (cause) {
+      setUndoError(
+        cause instanceof Error
+          ? cause.message
+          : "The standup item could not be removed.",
+      );
+    }
+  }
+
+  function moveItem(itemId: string, direction: -1 | 1) {
+    const currentIndex = items.findIndex((item) => item.id === itemId);
+    const destinationIndex = currentIndex + direction;
+    if (
+      currentIndex < 0 ||
+      destinationIndex < 0 ||
+      destinationIndex >= items.length
+    ) {
+      return;
+    }
+
+    const itemIds = items.map((item) => item.id);
+    [itemIds[currentIndex], itemIds[destinationIndex]] = [
+      itemIds[destinationIndex],
+      itemIds[currentIndex],
+    ];
+    startOrderTransition(async () => {
+      await reorderStandupItemsAction(ledgerId, itemIds);
+    });
+  }
+
+  function undoDelete() {
+    if (!undoCandidate) return;
+    startUndoTransition(async () => {
+      try {
+        await restoreStandupItemAction(undoCandidate);
+        setUndoCandidate(null);
+        setUndoError(null);
+      } catch (cause) {
+        setUndoError(
+          cause instanceof Error
+            ? cause.message
+            : "The standup item could not be restored.",
+        );
+      }
     });
   }
 
@@ -387,8 +488,16 @@ function StandupSection({
         <>
           {items.length > 0 && (
             <ul className="mt-3 space-y-2 border-t border-amber-200 pt-3">
-              {items.map((item) => (
-                <StandupItemRow key={item.id} item={item} />
+              {items.map((item, index) => (
+                <StandupItemRow
+                  key={item.id}
+                  item={item}
+                  canMoveUp={index > 0}
+                  canMoveDown={index < items.length - 1}
+                  isOrderPending={isOrderPending}
+                  onDelete={deleteItem}
+                  onMove={moveItem}
+                />
               ))}
             </ul>
           )}
@@ -415,6 +524,40 @@ function StandupSection({
             </form>
           </div>
         </>
+      )}
+
+      {(undoCandidate || undoError) && (
+        <div
+          role={undoError ? "alert" : "status"}
+          aria-live="polite"
+          className="fixed bottom-4 left-1/2 z-50 flex w-[calc(100%-2rem)] max-w-md -translate-x-1/2 items-center justify-between gap-4 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-slate-950 shadow-2xl ring-1 ring-amber-200"
+        >
+          <span className="flex min-w-0 items-center gap-3">
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-800">
+              <RotateCcw className="size-4" />
+            </span>
+            <span className="min-w-0">
+              <span className="block font-bold">
+                {undoError ?? "Standup item removed"}
+              </span>
+              {!undoError && (
+                <span className="block text-xs text-slate-600">
+                  Restore it before this notice closes.
+                </span>
+              )}
+            </span>
+          </span>
+          {undoCandidate && (
+            <button
+              type="button"
+              onClick={undoDelete}
+              disabled={isUndoPending}
+              className="shrink-0 rounded-lg bg-amber-700 px-3 py-2 font-bold text-white shadow-sm transition hover:bg-amber-800 disabled:opacity-50"
+            >
+              {isUndoPending ? "Restoring…" : "Undo"}
+            </button>
+          )}
+        </div>
       )}
     </section>
   );

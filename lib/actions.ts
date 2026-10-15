@@ -2,7 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 import * as dal from "./data";
-import { DailySection, TaskUpdate, WrapUpDecision } from "./types";
+import {
+  DailySection,
+  StandupItem,
+  TaskUpdate,
+  WrapUpDecision,
+} from "./types";
 import { getTodayDateKey } from "./dates";
 
 function revalidateCollection(collectionId?: string) {
@@ -186,7 +191,22 @@ export async function updateStandupItemAction(
   revalidateDailyLedger();
 }
 
-export async function deleteStandupItemAction(itemId: string) {
-  await dal.deleteStandupItem(itemId);
+export async function reorderStandupItemsAction(
+  ledgerId: string,
+  itemIds: string[],
+) {
+  await dal.reorderStandupItems(ledgerId, itemIds);
   revalidateDailyLedger();
+}
+
+export async function deleteStandupItemAction(itemId: string) {
+  const item = await dal.deleteStandupItem(itemId);
+  revalidateDailyLedger();
+  return item;
+}
+
+export async function restoreStandupItemAction(item: StandupItem) {
+  const restoredItem = await dal.restoreStandupItem(item);
+  revalidateDailyLedger();
+  return restoredItem;
 }

@@ -4,6 +4,8 @@
 
 This document is a human-review draft transcribed from analog Backburner pages. Nothing here has been imported into application data.
 
+This file is retained as source-data provenance and a clarification checklist, not as a product or implementation backlog. Initial product scope belongs in the [initial build plan](./initial-build-planning-doc.md), and deferred capabilities belong in [Stage Two Notes](./stage-two-notes.md).
+
 Legend:
 
 - `[ ]` appears open or has no completion mark.

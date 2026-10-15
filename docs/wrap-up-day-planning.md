@@ -2,7 +2,7 @@
 
 ## Document Status
 
-This is a living planning document for the hard-stop wrap-up and daily-rollover feature. It begins with the broad workflow and data rules already established in the initial build plan. Interaction details and implementation tasks will be refined as the feature is prototyped.
+This document defines the hard-stop wrap-up and daily-rollover rules established for the first functional beta. The core guided wrap-up, rollover, standup draft, and missed-day recovery flow are implemented and undergoing use testing. Deferred design and product work is tracked in [Stage Two Notes](./stage-two-notes.md).
 
 ## Purpose
 
@@ -236,9 +236,11 @@ The wrap-up experience should be mobile-first and optimized for a short end-of-d
 - Keep quick capture near the top of the normal Daily Ledger, but collapse it to a compact **Add a task…** control when idle.
 - Hide Daily Ledger quick capture during the required wrap-up checklist and restore it during optional preparation after closure.
 
-The normal Daily Ledger should clearly indicate when it is closed and should not allow further task mutations without a future, explicit reopen capability.
+The normal Daily Ledger should clearly indicate when it is closed and should not allow further task mutations without a future, explicit reopen capability. Unified components, custom tooltip behavior, and other design-system work are intentionally tracked in [Stage Two Notes](./stage-two-notes.md) rather than in this feature plan.
 
 ## Broad Implementation Slices
+
+Slices 1 through 4 form the implemented beta workflow. The remaining planning, review, design-system, and history capabilities have moved to [Stage Two Notes](./stage-two-notes.md).
 
 ### Slice 1: Domain Operation
 
@@ -268,25 +270,6 @@ The normal Daily Ledger should clearly indicate when it is closed and should not
 - Gate activation of the current-day ledger until required closure completes.
 - Provide normal morning-preparation controls when wrap-up was already completed.
 
-### Slice 5: Weekly Radar and Task Selection
-
-- Add the Weekly Radar section as a canonical-task view.
-- Replace the long task dropdown with searchable, project-grouped selection.
-- Support direct placement into Work, Personal, or Weekly Radar.
-- Identify recent unfinished tasks as carryover candidates.
-
-### Slice 6: Aging and Review
-
-- Add review/activity timestamps needed for staleness.
-- Add the limited weekly aged-item review and explicit relevance outcomes.
-- Evaluate whether the review remains useful or belongs in a monthly Back Burner ritual.
-
-### Slice 7: History and Recovery
-
-- Expose a basic way to view a closed ledger.
-- Decide whether v0.1 needs a short undo window or an explicit reopen operation.
-- Define safe recovery behavior for an interrupted or failed rollover.
-
 ## Initial Acceptance Criteria
 
 - A day cannot close while any unfinished Daily Ledger task lacks a disposition.
@@ -304,16 +287,14 @@ The normal Daily Ledger should clearly indicate when it is closed and should not
 - If wrap-up was missed, the same required procedure remains available the next morning.
 - If wrap-up was completed, morning planning allows the prepared ledger to be adjusted normally.
 - Optional preparation may be skipped without invalidating closure.
-- Weekly Radar and Daily Ledger placements reference the same canonical task.
-- Merely viewing an aged task does not record it as reviewed.
 
-## Open Decisions
+## Current Beta Decisions
 
-- Should “tomorrow” mean the next calendar day or the next configured workday?
-- Should completed Work tasks be selected for the standup draft by default, or should all be included automatically and edited afterward?
-- Should Move to Tomorrow preserve the current ordering, and how should carried tasks merge with tasks already on the next ledger?
-- Does v0.1 need undo or reopen, and what changes remain safe after a ledger is reopened?
-- Should the wrap-up flow allow a task's Work / Personal section to change while it is being carried forward?
-- Where should closed-day history live before a fuller history screen exists?
-- Which task changes should update `lastActivityAt`, and should any of them also imply explicit review?
-- On which day should the weekly review be offered, and how should optional deferral be presented?
+- On-time wrap-up creates the next calendar day's ledger; missed-day recovery creates the current day's ledger.
+- All completed Work tasks generate editable standup draft items automatically.
+- Carry Forward preserves the task's current Work or Personal section and places it after existing items in that destination section.
+- Existing standup items remain attached to the ledger being closed and do not roll forward.
+- Standup items may be edited, reordered, or removed without changing their linked task or task history.
+- Standup removal currently includes a short Undo opportunity and remains a beta feature subject to retention review.
+
+Questions about configured workdays, reportable in-progress work, closed-ledger history, reopening, Weekly Radar, aged-item review, and unified interface architecture are maintained in [Stage Two Notes](./stage-two-notes.md).

@@ -2,7 +2,7 @@
 
 ## Document Status
 
-This is a living planning document for the Flow-State Daily Ledger (FSDL). Decisions will be refined as the product is prototyped and tested. Features may be retained, revised, deferred, or removed based on actual use.
+This document preserves the product vision, governing principles, and scope of the first Flow-State Daily Ledger (FSDL) build. The current future-work backlog is maintained separately in [Stage Two Notes](./stage-two-notes.md), allowing this document to remain a stable record of the v0.1 intent.
 
 ## Product Vision
 
@@ -39,6 +39,21 @@ All UI and interaction decisions will begin with a phone-sized viewport. Wider l
 ### Build for Experimentation
 
 The product will be developed iteratively. Sections and features should be modular enough to test, reconsider, revise, or remove without destabilizing the underlying task data.
+
+### Personal Ownership of Data
+
+Personal ownership of data is an overarching FSDL philosophy, not a feature reserved for a later hosting phase. The user's ledger, tasks, notes, history, and derived personal information remain under the user's control regardless of where the application stores or synchronizes them.
+
+FSDL should preserve that control through understandable, documented mechanisms that allow the user to:
+
+- Access and export all meaningful personal data in a practical, non-proprietary format.
+- Restore or migrate that data without depending on continued access to a particular FSDL service or vendor.
+- Choose whether data is synchronized or transmitted to an external service.
+- Archive information for long-term retention without keeping it in active workflows.
+- Permanently delete personal content, subject only to a clearly disclosed and bounded backup-retention period.
+- Continue using a local copy without a subscription or hosted account when the selected delivery model makes that possible.
+
+Durability, synchronization, automation, and convenience are important, but they must not quietly override personal ownership. When these values conflict, FSDL should present the tradeoff plainly and favor user control unless the user knowingly chooses otherwise. For example, end-to-end encryption or permanent deletion may reduce account recovery options, and local-only storage may place more backup responsibility on the user. FSDL should explain those consequences rather than retaining control or data by default.
 
 ### One Task, One Record
 
@@ -131,7 +146,7 @@ The first Daily Ledger page is implemented as the application's home screen. It 
 - Removal from today without deleting the canonical task.
 - An explicit picker for pulling active Backburner or project tasks into today.
 
-This is the starting interaction model for testing, not a permanent UI commitment. The hard-stop and daily-rollover workflows remain the next major Daily Ledger increment.
+This is the starting interaction model for testing, not a permanent UI commitment. The hard-stop, daily rollover, standup draft, and missed-day recovery workflows have since been implemented for beta testing; their governing rules are documented in the [Wrap-Up Day plan](./wrap-up-day-planning.md).
 
 ### Hard-Stop Wrap-Up
 
@@ -255,32 +270,12 @@ After the workflow produces a viable v0.1:
 - Prefer services with a practical free tier for a single-user application.
 - Keep the FSDL domain model and business rules independent of any authentication, database, hosting, or AI vendor.
 - Prefer standard, portable technologies such as PostgreSQL and ordinary web authentication protocols where practical.
+- Reject services or architectures that make practical export, migration, or permanent deletion dependent on remaining with a particular vendor.
 - Avoid premature infrastructure complexity during the local v0.1 UI/UX phase.
 - Reevaluate cost, limits, data export, privacy, and migration difficulty before adopting a hosted service.
 
 ## Future Features
 
-The following ideas are explicitly outside the first v0.1 prototype:
+Features outside the first functional beta—including unified design architecture, expanded planning and review views, AI assistance, notifications, synchronization, and packaged applications—are tracked in [Stage Two Notes](./stage-two-notes.md). Any AI integration must continue to follow the external-service approval principle described above.
 
-- Free-form daily notes and ideas
-- Voice-to-text capture
-- AI-assisted categorization
-- AI-assisted Backburner triage
-- AI-generated standup or end-of-day summaries
-- Configurable assistant permissions and automation rules
-- Explainable recommendations and an assistant-action history
-- Offline use and later synchronization
-- Notifications and reminders
-- Native or packaged mobile/desktop applications
-- Multi-user support
-
-Any AI integration must follow the external-service approval principle described above.
-
-## Open Product Questions
-
-- What information and controls must appear on a Daily Ledger task?
-- How should Backburner categories and priorities work?
-- How should projects and project tasks be represented?
-- Where should Backburner and Projects live in the mobile navigation?
-- Which deterministic rules may place tasks automatically, and which recommendations require confirmation?
-- What is the minimum morning kickoff and hard-stop workflow for v0.1?
+Product questions should move into Stage Two only when a beta observation or concrete user need makes them actionable. This avoids allowing the initial plan to become a second, competing backlog.

@@ -9,6 +9,8 @@ import {
   DailyLedgerView,
   DailySection,
   Project,
+  StandupItem,
+  StandupItemSchema,
   Task,
   TaskCollection,
   TaskUpdate,
@@ -903,7 +905,35 @@ export async function updateStandupItem(itemId: string, content: string) {
   await writeData(data);
 }
 
-export async function deleteStandupItem(itemId: string) {
+export async function reorderStandupItems(
+  ledgerId: string,
+  itemIds: string[],
+) {
+  const data = await readData();
+  const ledger = data.dailyLedgers.find((candidate) => candidate.id === ledgerId);
+  if (!ledger) throw new Error("Daily ledger not found");
+  if (ledger.status !== "OPEN") throw new Error("Daily ledger is closed");
+
+  const ledgerItemIds = data.standupItems
+    .filter((item) => item.ledgerId === ledgerId)
+    .map((item) => item.id);
+  const requestedItemIds = new Set(itemIds);
+  if (
+    itemIds.length !== ledgerItemIds.length ||
+    requestedItemIds.size !== itemIds.length ||
+    ledgerItemIds.some((id) => !requestedItemIds.has(id))
+  ) {
+    throw new Error("Reorder request does not match the standup items");
+  }
+
+  itemIds.forEach((id, sortOrder) => {
+    const item = data.standupItems.find((candidate) => candidate.id === id);
+    if (item) item.sortOrder = sortOrder;
+  });
+  await writeData(data);
+}
+
+export async function deleteStandupItem(itemId: string): Promise<StandupItem> {
   const data = await readData();
   const item = data.standupItems.find((candidate) => candidate.id === itemId);
   if (!item) throw new Error("Standup item not found");
@@ -917,5 +947,55 @@ export async function deleteStandupItem(itemId: string) {
     throw new Error("Standup item not found");
   }
   data.standupItems = nextItems;
+  for (const remainingItem of data.standupItems) {
+    if (
+      remainingItem.ledgerId === item.ledgerId &&
+      remainingItem.sortOrder > item.sortOrder
+    ) {
+      remainingItem.sortOrder -= 1;
+    }
+  }
   await writeData(data);
+  return item;
+}
+
+export async function restoreStandupItem(
+  candidate: StandupItem,
+): Promise<StandupItem> {
+  const data = await readData();
+  const item = StandupItemSchema.parse(candidate);
+  const existing = data.standupItems.find(
+    (standupItem) => standupItem.id === item.id,
+  );
+  if (existing) return existing;
+
+  const ledger = data.dailyLedgers.find(
+    (dailyLedger) => dailyLedger.id === item.ledgerId,
+  );
+  if (!ledger) throw new Error("Daily ledger not found");
+  if (ledger.status !== "OPEN") throw new Error("Daily ledger is closed");
+  if (
+    item.taskId &&
+    !data.tasks.some((task) => task.id === item.taskId)
+  ) {
+    throw new Error("Linked task not found");
+  }
+
+  const ledgerItems = data.standupItems.filter(
+    (standupItem) => standupItem.ledgerId === item.ledgerId,
+  );
+  const restoredSortOrder = Math.min(item.sortOrder, ledgerItems.length);
+  for (const existingItem of ledgerItems) {
+    if (existingItem.sortOrder >= restoredSortOrder) {
+      existingItem.sortOrder += 1;
+    }
+  }
+
+  const restoredItem = {
+    ...item,
+    sortOrder: restoredSortOrder,
+  };
+  data.standupItems.push(restoredItem);
+  await writeData(data);
+  return restoredItem;
 }
