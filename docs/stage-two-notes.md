@@ -39,13 +39,18 @@ Mobile beta does not require offline synchronization or a native mobile applicat
 
 ### Local Data Isolation
 
-Using JSON during beta is intentional and remains consistent with the initial technical approach. The deficiency is that the active `dummy-data.json` file is currently tracked by Git, allowing machine-specific beta activity to appear as source changes.
+Using JSON during beta is intentional and remains consistent with the initial technical approach.
 
-Before the application becomes a regular daily driver, separate the data roles:
+The initial tracking deficiency was resolved on October 19, 2026:
 
-- Keep a small committed seed or example data file for development and migration testing.
-- Store active local beta data in a Git-ignored working file.
-- Document a simple backup and restore procedure appropriate for the JSON beta.
+- `data/example-ledger.json` is the committed, sanitized starting fixture.
+- `dummy-data.json` is the Git-ignored active local beta store.
+- `local-backups/` is ignored, and the README documents initialization, backup,
+  and restore procedures.
+
+This separation prevents routine ledger activity from becoming a source-code
+change. Git and GitHub do not back up the active ledger, so important backups
+must also be copied outside the repository.
 
 ### Historical Integrity
 
