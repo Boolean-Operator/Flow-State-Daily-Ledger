@@ -155,7 +155,7 @@ The current task model has an `ARCHIVED` status but no `archivedAt` timestamp. A
 - Decide which information and controls belong on the compact Daily Ledger task and which belong in expanded task details.
 - Refine how Back Burner categories, user priority, calculated urgency, and target dates should work together.
 - Define how projects, project steps, and project reference notes are represented without turning every project into another manually maintained list.
-- Establish where Projects and Back Burner belong in mobile navigation as part of the unified information architecture.
+- Evaluate the implemented Today / Plan / Help navigation and area-based planning views through mobile and desktop beta use.
 - Keep deterministic placement rules visibly distinct from assistant recommendations that require confirmation.
 
 ## Planning and Review Capabilities
@@ -184,12 +184,21 @@ The current task model has an `ARCHIVED` status but no `archivedAt` timestamp. A
 ## Assistance and Automation Candidates
 
 - Free-form daily notes and ideas.
-- Voice-to-text capture.
 - AI-assisted categorization and Back Burner triage.
 - AI-assisted standup and end-of-day summarization with proposal review before use.
 - Configurable assistant permissions and narrowly scoped automation rules.
 - Explainable recommendations and an assistant-action history.
 - Notifications and reminders, including an optional end-of-day wrap-up reminder.
+
+### Voice Capture and Control
+
+Treat voice as a progressive mobile input capability rather than granting an assistant broad control immediately:
+
+1. **Dictation:** allow voice-to-text capture anywhere a task or standup item can be entered. Show the transcript for review before saving.
+2. **Confirmed commands:** interpret narrowly scoped requests such as adding a Personal task, placing a Work item in a project, moving an item between planning views, renaming a list or project, or marking a named task complete. Resolve named destinations explicitly and show the proposed action before applying it.
+3. **Conversational assistance:** support multi-step planning and organization, such as reviewing a project, editing several items, or preparing a proposed set of moves. Require a preview for ambiguous, multi-item, destructive, or structural changes, then apply the confirmed proposal atomically.
+
+Voice controls must remain optional, touch- and keyboard-equivalent, and reversible. Applied commands should offer Undo and appear in the assistant-action history. FSDL must not continuously listen, silently apply an ambiguous command, or transmit audio, transcripts, or ledger context to an external service without the disclosure and approval required by the user's governance settings. When on-device transcription is available and adequate, prefer it over external transmission. Permanent deletion should require an explicit non-voice confirmation even when initiated conversationally.
 
 Any external AI or service integration must continue to show what data will be transmitted and require the level of approval defined by the user's governance settings.
 
@@ -197,6 +206,8 @@ Any external AI or service integration must continue to show what data will be t
 
 - Move from local JSON persistence to authenticated hosted storage when multi-device use becomes a real requirement.
 - Evaluate PostgreSQL, authentication, hosting, data export, privacy, and migration costs at that time.
+- Add an account Settings surface with a preferred wrap-up time and timezone. Migrate the beta's 6:00 PM device-local default to that profile preference once accounts exist.
+- Keep the in-app wrap-up prompt preference separate from notification delivery and permission settings.
 - Support the same ledger across the MacBook, Linux desktop, and Android phone.
 - Define synchronization behavior before enabling offline editing.
 - Evaluate native or packaged desktop and mobile applications after the browser workflow is stable.

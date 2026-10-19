@@ -2,11 +2,17 @@ import { z } from "zod";
 
 export const SCHEMA_VERSION = 2 as const;
 export const BACK_BURNER_ID = "backburner";
+export const INBOX_ID = BACK_BURNER_ID;
+export const WORK_BACKLOG_ID = "work-backlog";
+export const PERSONAL_BACK_BURNER_ID = "personal-back-burner";
+
+export const TaskAreaSchema = z.enum(["WORK", "PERSONAL", "UNCLASSIFIED"]);
 
 export const ProjectSchema = z.object({
   id: z.string().min(1),
   title: z.string().trim().min(1),
   description: z.string().nullable(),
+  area: TaskAreaSchema.default("UNCLASSIFIED"),
   status: z.enum(["ACTIVE", "ARCHIVED"]),
   sortOrder: z.number().int().nonnegative(),
   createdAt: z.string().datetime({ offset: true }),
@@ -25,7 +31,7 @@ export const TaskSchema = z.object({
     "CANCELED",
     "ARCHIVED",
   ]),
-  area: z.enum(["WORK", "PERSONAL", "UNCLASSIFIED"]),
+  area: TaskAreaSchema,
   projectId: z.string().nullable(),
   parentTaskId: z.string().nullable(),
   priority: z.number().int().min(1).max(5).nullable(),
@@ -76,6 +82,7 @@ export const StandupItemSchema = z.object({
   id: z.string().min(1),
   ledgerId: z.string().min(1),
   taskId: z.string().nullable(),
+  sourceTaskIds: z.array(z.string().min(1)).optional(),
   summary: z.string().trim().min(1),
   detail: z.string().nullable(),
   sortOrder: z.number().int().nonnegative(),
@@ -94,6 +101,7 @@ export const DataStoreSchema = z.object({
 
 export type Project = z.infer<typeof ProjectSchema>;
 export type Task = z.infer<typeof TaskSchema>;
+export type TaskArea = z.infer<typeof TaskAreaSchema>;
 export type DailyLedger = z.infer<typeof DailyLedgerSchema>;
 export type DailyLedgerEntry = z.infer<typeof DailyLedgerEntrySchema>;
 export type StandupItem = z.infer<typeof StandupItemSchema>;
@@ -105,14 +113,23 @@ export interface TaskCollection {
   title: string;
   tasks: Task[];
   isSystem: boolean;
+  area: TaskArea;
 }
 
 export type DailySection = "WORK" | "PERSONAL";
 export type WrapUpDisposition = "COMPLETE" | "MOVE" | "DEFER" | "CANCEL";
+export type StandupProgressStatus = "IN_PROGRESS" | "NEXT" | "EXCLUDE";
 
 export interface WrapUpDecision {
   entryId: string;
   disposition: WrapUpDisposition;
+  standupStatus?: StandupProgressStatus;
+}
+
+export interface WrapUpStandupDraftItem {
+  summary: string;
+  detail: string | null;
+  sourceTaskIds: string[];
 }
 
 export interface DailyTaskView {

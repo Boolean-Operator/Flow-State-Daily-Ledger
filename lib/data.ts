@@ -1,28 +1,51 @@
 import { promises as fs } from "fs";
 import path from "path";
 import {
-  BACK_BURNER_ID,
   AvailableTaskView,
   DataStore,
   DataStoreSchema,
   DailyLedger,
   DailyLedgerView,
   DailySection,
+  INBOX_ID,
+  PERSONAL_BACK_BURNER_ID,
   Project,
   StandupItem,
   StandupItemSchema,
   Task,
+  TaskArea,
   TaskCollection,
   TaskUpdate,
   WrapUpDecision,
+  WrapUpStandupDraftItem,
+  WORK_BACKLOG_ID,
 } from "./types";
 import { getRolloverDateKey } from "./dates";
 
 const DATA_PATH = path.join(process.cwd(), "dummy-data.json");
 
+const systemCollections: Array<{
+  id: string;
+  title: string;
+  area: TaskArea;
+}> = [
+  { id: INBOX_ID, title: "Inbox", area: "UNCLASSIFIED" },
+  { id: WORK_BACKLOG_ID, title: "Work Backlog", area: "WORK" },
+  {
+    id: PERSONAL_BACK_BURNER_ID,
+    title: "Personal Back Burner",
+    area: "PERSONAL",
+  },
+];
+
+function getSystemCollection(collectionId: string) {
+  return systemCollections.find((collection) => collection.id === collectionId);
+}
+
 function taskBelongsToCollection(task: Task, collectionId: string) {
-  return collectionId === BACK_BURNER_ID
-    ? task.projectId === null
+  const systemCollection = getSystemCollection(collectionId);
+  return systemCollection
+    ? task.projectId === null && task.area === systemCollection.area
     : task.projectId === collectionId;
 }
 
@@ -32,6 +55,33 @@ function sortTasks(tasks: Task[]) {
 
 function isVisibleCollectionTask(task: Task) {
   return task.status !== "ARCHIVED";
+}
+
+function getActiveDailyTaskIds(data: DataStore) {
+  const openLedgerIds = new Set(
+    data.dailyLedgers
+      .filter((ledger) => ledger.status === "OPEN")
+      .map((ledger) => ledger.id),
+  );
+  return new Set(
+    data.dailyLedgerEntries
+      .filter((entry) => openLedgerIds.has(entry.ledgerId))
+      .map((entry) => entry.taskId),
+  );
+}
+
+function getCollectionTasks(data: DataStore, collectionId: string) {
+  const systemCollection = getSystemCollection(collectionId);
+  const activeDailyTaskIds = systemCollection
+    ? getActiveDailyTaskIds(data)
+    : new Set<string>();
+
+  return data.tasks.filter(
+    (task) =>
+      taskBelongsToCollection(task, collectionId) &&
+      isVisibleCollectionTask(task) &&
+      !activeDailyTaskIds.has(task.id),
+  );
 }
 
 export async function readData(): Promise<DataStore> {
@@ -56,29 +106,11 @@ export async function writeData(data: DataStore): Promise<void> {
 
 export async function getTaskCollections(): Promise<TaskCollection[]> {
   const data = await readData();
-  const openLedgerIds = new Set(
-    data.dailyLedgers
-      .filter((ledger) => ledger.status === "OPEN")
-      .map((ledger) => ledger.id),
-  );
-  const activeDailyTaskIds = new Set(
-    data.dailyLedgerEntries
-      .filter((entry) => openLedgerIds.has(entry.ledgerId))
-      .map((entry) => entry.taskId),
-  );
-  const backBurner: TaskCollection = {
-    id: BACK_BURNER_ID,
-    title: "Back Burner",
-    tasks: sortTasks(
-      data.tasks.filter(
-        (task) =>
-          task.projectId === null &&
-          isVisibleCollectionTask(task) &&
-          !activeDailyTaskIds.has(task.id),
-      ),
-    ),
+  const planningLists = systemCollections.map<TaskCollection>((collection) => ({
+    ...collection,
+    tasks: sortTasks(getCollectionTasks(data, collection.id)),
     isSystem: true,
-  };
+  }));
 
   const projects = data.projects
     .filter((project) => project.status === "ACTIVE")
@@ -86,6 +118,7 @@ export async function getTaskCollections(): Promise<TaskCollection[]> {
     .map((project) => ({
       id: project.id,
       title: project.title,
+      area: project.area,
       tasks: sortTasks(
         data.tasks.filter(
           (task) =>
@@ -95,7 +128,7 @@ export async function getTaskCollections(): Promise<TaskCollection[]> {
       isSystem: false,
     }));
 
-  return [backBurner, ...projects];
+  return [...planningLists, ...projects];
 }
 
 export async function getTaskCollectionById(
@@ -103,15 +136,11 @@ export async function getTaskCollectionById(
 ): Promise<TaskCollection | null> {
   const data = await readData();
 
-  if (id === BACK_BURNER_ID) {
+  const systemCollection = getSystemCollection(id);
+  if (systemCollection) {
     return {
-      id,
-      title: "Back Burner",
-      tasks: sortTasks(
-        data.tasks.filter(
-          (task) => task.projectId === null && isVisibleCollectionTask(task),
-        ),
-      ),
+      ...systemCollection,
+      tasks: sortTasks(getCollectionTasks(data, id)),
       isSystem: true,
     };
   }
@@ -124,6 +153,7 @@ export async function getTaskCollectionById(
   return {
     id: project.id,
     title: project.title,
+    area: project.area,
     tasks: sortTasks(
       data.tasks.filter(
         (task) => task.projectId === project.id && isVisibleCollectionTask(task),
@@ -133,7 +163,17 @@ export async function getTaskCollectionById(
   };
 }
 
-export async function createProject(title: string): Promise<Project> {
+export async function getActiveProjects(): Promise<Project[]> {
+  const data = await readData();
+  return data.projects
+    .filter((project) => project.status === "ACTIVE")
+    .sort((a, b) => a.sortOrder - b.sortOrder);
+}
+
+export async function createProject(
+  title: string,
+  area: TaskArea = "UNCLASSIFIED",
+): Promise<Project> {
   const data = await readData();
   const normalizedTitle = title.trim();
   if (!normalizedTitle) throw new Error("Project title is required");
@@ -142,6 +182,7 @@ export async function createProject(title: string): Promise<Project> {
     id: crypto.randomUUID(),
     title: normalizedTitle,
     description: null,
+    area,
     status: "ACTIVE",
     sortOrder: data.projects.length,
     createdAt: new Date().toISOString(),
@@ -163,6 +204,20 @@ export async function updateProjectTitle(id: string, title: string) {
   if (!normalizedTitle) throw new Error("Project title is required");
 
   project.title = normalizedTitle;
+  await writeData(data);
+}
+
+export async function updateProjectArea(id: string, area: TaskArea) {
+  const data = await readData();
+  const project = data.projects.find((candidate) => candidate.id === id);
+  if (!project) throw new Error("Project not found");
+
+  project.area = area;
+  if (area !== "UNCLASSIFIED") {
+    for (const task of data.tasks) {
+      if (task.projectId === project.id) task.area = area;
+    }
+  }
   await writeData(data);
 }
 
@@ -197,16 +252,16 @@ export async function addTaskToCollection(
   const normalizedTitle = input.title.trim();
   if (!normalizedTitle) throw new Error("Task title is required");
 
-  if (
-    collectionId !== BACK_BURNER_ID &&
-    !data.projects.some(
-      (project) => project.id === collectionId && project.status === "ACTIVE",
-    )
-  ) {
+  const systemCollection = getSystemCollection(collectionId);
+  const project = data.projects.find(
+    (candidate) =>
+      candidate.id === collectionId && candidate.status === "ACTIVE",
+  );
+  if (!systemCollection && !project) {
     throw new Error("Project not found");
   }
 
-  const projectId = collectionId === BACK_BURNER_ID ? null : collectionId;
+  const projectId = systemCollection ? null : collectionId;
   const sortOrder = data.tasks.filter(
     (task) => task.projectId === projectId,
   ).length;
@@ -215,7 +270,7 @@ export async function addTaskToCollection(
     title: normalizedTitle,
     description: null,
     status: "OPEN",
-    area: "UNCLASSIFIED",
+    area: systemCollection?.area ?? project?.area ?? "UNCLASSIFIED",
     projectId,
     parentTaskId: null,
     priority: input.priority,
@@ -240,13 +295,9 @@ export async function addTaskToCollection(
 
 export async function reorderTasks(collectionId: string, taskIds: string[]) {
   const data = await readData();
-  const collectionTaskIds = data.tasks
-    .filter(
-      (task) =>
-        taskBelongsToCollection(task, collectionId) &&
-        isVisibleCollectionTask(task),
-    )
-    .map((task) => task.id);
+  const collectionTaskIds = getCollectionTasks(data, collectionId).map(
+    (task) => task.id,
+  );
 
   if (
     taskIds.length !== collectionTaskIds.length ||
@@ -323,20 +374,18 @@ function moveTasksInData(
   taskIds: string[],
   destinationCollectionId: string,
 ) {
-  if (
-    destinationCollectionId !== BACK_BURNER_ID &&
-    !data.projects.some(
-      (project) =>
-        project.id === destinationCollectionId && project.status === "ACTIVE",
-    )
-  ) {
+  const systemCollection = getSystemCollection(destinationCollectionId);
+  const destinationProject = data.projects.find(
+    (project) =>
+      project.id === destinationCollectionId && project.status === "ACTIVE",
+  );
+  if (!systemCollection && !destinationProject) {
     throw new Error("Destination project not found");
   }
 
-  const destinationProjectId =
-    destinationCollectionId === BACK_BURNER_ID
-      ? null
-      : destinationCollectionId;
+  const destinationProjectId = systemCollection
+    ? null
+    : destinationCollectionId;
   let nextSortOrder = data.tasks.filter(
     (task) =>
       task.projectId === destinationProjectId && !taskIds.includes(task.id),
@@ -346,6 +395,10 @@ function moveTasksInData(
     const task = data.tasks.find((candidate) => candidate.id === taskId);
     if (!task) continue;
     task.projectId = destinationProjectId;
+    if (systemCollection) task.area = systemCollection.area;
+    else if (destinationProject && destinationProject.area !== "UNCLASSIFIED") {
+      task.area = destinationProject.area;
+    }
     task.sortOrder = nextSortOrder;
     nextSortOrder += 1;
   }
@@ -372,10 +425,20 @@ export async function createProjectFromTasks(
   if (!normalizedTitle) throw new Error("Project title is required");
   assertTasksExist(data, uniqueTaskIds);
 
+  const selectedAreas = new Set(
+    data.tasks
+      .filter((task) => uniqueTaskIds.includes(task.id))
+      .map((task) => task.area),
+  );
+  const area: TaskArea =
+    selectedAreas.size === 1
+      ? (selectedAreas.values().next().value ?? "UNCLASSIFIED")
+      : "UNCLASSIFIED";
   const project: Project = {
     id: crypto.randomUUID(),
     title: normalizedTitle,
     description: null,
+    area,
     status: "ACTIVE",
     sortOrder: data.projects.length,
     createdAt: new Date().toISOString(),
@@ -397,6 +460,24 @@ export async function archiveTasks(taskIds: string[]) {
 
   for (const task of data.tasks) {
     if (selectedIds.has(task.id)) task.status = "ARCHIVED";
+  }
+
+  await writeData(data);
+}
+
+export async function restoreArchivedTasks(taskIds: string[]) {
+  const data = await readData();
+  const uniqueTaskIds = getUniqueTaskIds(taskIds);
+  assertTasksExist(data, uniqueTaskIds);
+  const selectedIds = new Set(uniqueTaskIds);
+
+  for (const task of data.tasks) {
+    if (!selectedIds.has(task.id) || task.status !== "ARCHIVED") continue;
+    task.status = task.completedAt
+      ? "COMPLETED"
+      : task.canceledAt
+        ? "CANCELED"
+        : "OPEN";
   }
 
   await writeData(data);
@@ -522,6 +603,7 @@ export async function wrapUpDailyLedger(
   ledgerId: string,
   currentDate: string,
   decisions: WrapUpDecision[],
+  standupDraft: WrapUpStandupDraftItem[],
 ) {
   const data = await readData();
   const ledger = data.dailyLedgers.find((candidate) => candidate.id === ledgerId);
@@ -536,6 +618,9 @@ export async function wrapUpDailyLedger(
   );
   const decisionsByEntryId = new Map(
     decisions.map((decision) => [decision.entryId, decision.disposition]),
+  );
+  const decisionDetailsByEntryId = new Map(
+    decisions.map((decision) => [decision.entryId, decision]),
   );
   const validDispositions = new Set([
     "COMPLETE",
@@ -554,6 +639,21 @@ export async function wrapUpDailyLedger(
     )
   ) {
     throw new Error("Every unfinished task requires exactly one disposition");
+  }
+
+  for (const entry of unfinishedEntries) {
+    const decision = decisionDetailsByEntryId.get(entry.id);
+    if (
+      entry.section === "WORK" &&
+      decision?.disposition === "MOVE" &&
+      decision.standupStatus !== "IN_PROGRESS" &&
+      decision.standupStatus !== "NEXT" &&
+      decision.standupStatus !== "EXCLUDE"
+    ) {
+      throw new Error(
+        "Pending Work requires an In progress, Next, or Do not include Standup choice",
+      );
+    }
   }
 
   const nextDate = getRolloverDateKey(ledger.date, currentDate);
@@ -620,32 +720,59 @@ export async function wrapUpDailyLedger(
 
   const existingStandupTaskIds = new Set(
     data.standupItems
-      .filter((item) => item.ledgerId === nextLedger.id && item.taskId)
-      .map((item) => item.taskId),
+      .filter((item) => item.ledgerId === nextLedger.id)
+      .flatMap((item) => item.sourceTaskIds ?? (item.taskId ? [item.taskId] : [])),
   );
   let nextStandupOrder = data.standupItems.filter(
     (item) => item.ledgerId === nextLedger.id,
   ).length;
 
-  for (const entry of ledgerEntries
+  const standupCandidateTaskIds = ledgerEntries
     .filter(
       (candidate) =>
-        candidate.section === "WORK" && candidate.outcome === "COMPLETED",
+        candidate.section === "WORK" &&
+        (candidate.outcome === "COMPLETED" ||
+          (candidate.outcome === "MOVED" &&
+            (decisionDetailsByEntryId.get(candidate.id)?.standupStatus ===
+              "IN_PROGRESS" ||
+              decisionDetailsByEntryId.get(candidate.id)?.standupStatus ===
+                "NEXT"))),
     )
-    .sort((a, b) => a.sortOrder - b.sortOrder)) {
-    if (existingStandupTaskIds.has(entry.taskId)) continue;
-    const task = data.tasks.find((candidate) => candidate.id === entry.taskId);
-    if (!task) throw new Error(`Task not found for Daily Ledger entry ${entry.id}`);
+    .sort((a, b) => a.sortOrder - b.sortOrder)
+    .filter((entry) => !existingStandupTaskIds.has(entry.taskId))
+    .map((entry) => entry.taskId);
+  const submittedSourceTaskIds = standupDraft.flatMap(
+    (item) => item.sourceTaskIds,
+  );
+  const submittedSourceTaskIdSet = new Set(submittedSourceTaskIds);
+
+  if (
+    standupDraft.some(
+      (item) => !item.summary.trim() || item.sourceTaskIds.length === 0,
+    ) ||
+    submittedSourceTaskIds.length !== submittedSourceTaskIdSet.size ||
+    submittedSourceTaskIdSet.size !== standupCandidateTaskIds.length ||
+    standupCandidateTaskIds.some(
+      (taskId) => !submittedSourceTaskIdSet.has(taskId),
+    )
+  ) {
+    throw new Error("The standup draft does not match the resolved Work tasks");
+  }
+
+  for (const draftItem of standupDraft) {
     data.standupItems.push({
       id: crypto.randomUUID(),
       ledgerId: nextLedger.id,
-      taskId: task.id,
-      summary: task.title,
-      detail: null,
+      taskId:
+        draftItem.sourceTaskIds.length === 1
+          ? draftItem.sourceTaskIds[0]
+          : null,
+      sourceTaskIds: draftItem.sourceTaskIds,
+      summary: draftItem.summary.trim(),
+      detail: draftItem.detail?.trim() || null,
       sortOrder: nextStandupOrder,
       createdAt: now,
     });
-    existingStandupTaskIds.add(task.id);
     nextStandupOrder += 1;
   }
 
@@ -694,6 +821,7 @@ export async function createDailyTask(
   date: string,
   section: DailySection,
   title: string,
+  projectId: string | null = null,
 ) {
   const data = await readData();
   const normalizedTitle = title.trim();
@@ -702,6 +830,16 @@ export async function createDailyTask(
   const ledger = findOrCreateDailyLedger(data, date);
   if (ledger.status !== "OPEN") throw new Error("Daily ledger is closed");
   assertActiveLedger(data, ledger);
+  const project = projectId
+    ? data.projects.find(
+        (candidate) =>
+          candidate.id === projectId && candidate.status === "ACTIVE",
+      )
+    : null;
+  if (projectId && !project) throw new Error("Project not found");
+  if (project && project.area !== section) {
+    throw new Error("Choose a project that matches the Daily Ledger section");
+  }
   const sortOrder = data.dailyLedgerEntries.filter(
     (entry) => entry.ledgerId === ledger.id && entry.section === section,
   ).length;
@@ -711,14 +849,15 @@ export async function createDailyTask(
     description: null,
     status: "OPEN",
     area: section,
-    projectId: null,
+    projectId,
     parentTaskId: null,
     priority: null,
     calculatedUrgency: null,
     hardDueDate: null,
     targetDate: date,
-    sortOrder: data.tasks.filter((candidate) => candidate.projectId === null)
-      .length,
+    sortOrder: data.tasks.filter(
+      (candidate) => candidate.projectId === projectId,
+    ).length,
     createdAt: new Date().toISOString(),
     completedAt: null,
     canceledAt: null,

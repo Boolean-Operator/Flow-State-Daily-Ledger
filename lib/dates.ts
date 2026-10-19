@@ -21,6 +21,11 @@ export function formatLedgerDate(dateKey: string): string {
   }).format(new Date(`${dateKey}T12:00:00Z`));
 }
 
+export function isWeekendDateKey(dateKey: string): boolean {
+  const day = new Date(`${dateKey}T12:00:00Z`).getUTCDay();
+  return day === 0 || day === 6;
+}
+
 export function getRolloverDateKey(
   ledgerDate: string,
   currentDate: string,

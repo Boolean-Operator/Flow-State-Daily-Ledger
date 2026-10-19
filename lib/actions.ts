@@ -5,8 +5,10 @@ import * as dal from "./data";
 import {
   DailySection,
   StandupItem,
+  TaskArea,
   TaskUpdate,
   WrapUpDecision,
+  WrapUpStandupDraftItem,
 } from "./types";
 import { getTodayDateKey } from "./dates";
 
@@ -21,13 +23,21 @@ function revalidateDailyLedger() {
   revalidatePath("/collections");
 }
 
-export async function createProjectAction(title: string) {
-  await dal.createProject(title);
+export async function createProjectAction(
+  title: string,
+  area: TaskArea = "UNCLASSIFIED",
+) {
+  await dal.createProject(title, area);
   revalidateCollection();
 }
 
 export async function updateProjectTitleAction(id: string, title: string) {
   await dal.updateProjectTitle(id, title);
+  revalidateCollection(id);
+}
+
+export async function updateProjectAreaAction(id: string, area: TaskArea) {
+  await dal.updateProjectArea(id, area);
   revalidateCollection(id);
 }
 
@@ -95,6 +105,14 @@ export async function archiveTasksAction(
   revalidateCollection(collectionId);
 }
 
+export async function restoreArchivedTasksAction(
+  collectionId: string,
+  taskIds: string[],
+) {
+  await dal.restoreArchivedTasks(taskIds);
+  revalidateCollection(collectionId);
+}
+
 export async function deleteTasksAction(
   collectionId: string,
   taskIds: string[],
@@ -115,8 +133,9 @@ export async function createDailyTaskAction(
   date: string,
   section: DailySection,
   title: string,
+  projectId: string | null = null,
 ) {
-  await dal.createDailyTask(date, section, title);
+  await dal.createDailyTask(date, section, title, projectId);
   revalidateDailyLedger();
 }
 
@@ -132,8 +151,14 @@ export async function addTaskToDailyLedgerAction(
 export async function wrapUpDailyLedgerAction(
   ledgerId: string,
   decisions: WrapUpDecision[],
+  standupDraft: WrapUpStandupDraftItem[],
 ) {
-  await dal.wrapUpDailyLedger(ledgerId, getTodayDateKey(), decisions);
+  await dal.wrapUpDailyLedger(
+    ledgerId,
+    getTodayDateKey(),
+    decisions,
+    standupDraft,
+  );
   revalidateDailyLedger();
 }
 

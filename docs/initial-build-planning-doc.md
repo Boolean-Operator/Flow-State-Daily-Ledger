@@ -27,8 +27,8 @@ The Daily Ledger contains only tasks selected for the current day. Projects, som
 
 The initial digital layout should preserve the useful mental separation of the steno-pad system:
 
-- Work / Standup tasks
-- Personal / Home tasks
+- Work tasks
+- Personal tasks
 
 These should be visibly distinct sections rather than a single list differentiated only by labels.
 
@@ -131,7 +131,7 @@ The goal of v0.1 is to validate the core FSDL workflow and mobile-first UI using
 ### Daily Ledger
 
 - Show only today's actionable tasks.
-- Provide separate Work / Standup and Personal / Home sections.
+- Provide separate Work and Personal sections.
 - Support creating, editing, completing, ordering, and removing daily tasks.
 - Do not include free-form notes or ideas in the first prototype.
 
@@ -140,13 +140,27 @@ The goal of v0.1 is to validate the core FSDL workflow and mobile-first UI using
 The first Daily Ledger page is implemented as the application's home screen. It includes:
 
 - The current date and a reserved Yesterday / Standup area.
-- Mobile-first Work / Standup and Personal / Home sections.
+- Mobile-first Work and Personal sections.
 - Quick capture directly into either section.
 - Completion, title editing, section switching, and manual ordering.
 - Removal from today without deleting the canonical task.
 - An explicit picker for pulling active Backburner or project tasks into today.
 
 This is the starting interaction model for testing, not a permanent UI commitment. The hard-stop, daily rollover, standup draft, and missed-day recovery workflows have since been implemented for beta testing; their governing rules are documented in the [Wrap-Up Day plan](./wrap-up-day-planning.md).
+
+#### Plan and Help Implementation
+
+The primary navigation now separates **Today**, **Plan**, and **Help**. Plan organizes canonical tasks without copying them:
+
+- Inbox contains standalone tasks that are not yet classified.
+- Work Backlog contains standalone Work tasks.
+- Personal Back Burner contains standalone Personal tasks.
+- Planning-list and project counts describe open work only. Completed records leave the active backlog and remain available in a separate, collapsed Completed history section for review, reopening, or archival.
+- Projects are classified as Work, Personal, or Unclassified; existing projects remain Unclassified until the user deliberately categorizes them.
+- Moving a task to a planning list changes its area, while moving it to a classified project adopts that project's area.
+- Daily Ledger capture prioritizes speed: new Work and Personal tasks go to their corresponding standalone backlog and Today. Wrap Up reviews the outcome of unfinished tasks in both areas; pending Work separately chooses whether and how it appears in Standup.
+
+Help provides an in-application FAQ focused first on correct Standup usage, presentation-only editing and removal, weekend behavior, planning lists, project movement, and local data ownership.
 
 ### Hard-Stop Wrap-Up
 

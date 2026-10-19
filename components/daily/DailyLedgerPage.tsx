@@ -3,7 +3,6 @@
 import { FormEvent, useEffect, useState, useTransition } from "react";
 import {
   ArrowDown,
-  ArrowRight,
   ArrowUp,
   CalendarCheck2,
   ChevronDown,
@@ -36,24 +35,29 @@ import {
   DailyTaskView,
   StandupItem,
 } from "@/lib/types";
-import { formatLedgerDate } from "@/lib/dates";
+import { formatLedgerDate, isWeekendDateKey } from "@/lib/dates";
 
 const sectionStyles = {
   WORK: {
-    label: "Work / Standup",
+    label: "Work",
     shortLabel: "Work",
     border: "border-blue-200",
     header: "bg-blue-50 text-blue-950",
     accent: "bg-blue-600",
   },
   PERSONAL: {
-    label: "Personal / Home",
+    label: "Personal",
     shortLabel: "Personal",
     border: "border-emerald-200",
     header: "bg-emerald-50 text-emerald-950",
     accent: "bg-emerald-600",
   },
 } as const;
+
+// Account-backed settings will replace this beta default when authentication
+// and user profiles are introduced.
+const DEFAULT_WRAP_UP_HOUR = 18;
+const DISMISSED_WRAP_UP_PROMPT_KEY = "fsdl:dismissed-wrap-up-prompt-ledger";
 
 function DailyTaskRow({
   item,
@@ -219,6 +223,7 @@ function DailySectionCard({
   items: DailyTaskView[];
   ledgerId: string;
 }) {
+  const [expanded, setExpanded] = useState(true);
   const styles = sectionStyles[section];
   const completeCount = items.filter(
     (item) => item.entry.outcome === "COMPLETED",
@@ -226,34 +231,49 @@ function DailySectionCard({
 
   return (
     <section className={`overflow-hidden rounded-xl border bg-white ${styles.border}`}>
-      <header className={`flex items-center justify-between px-4 py-3 ${styles.header}`}>
-        <div className="flex items-center gap-2">
-          <span className={`h-5 w-1 rounded-full ${styles.accent}`} />
-          <h2 className="font-bold">{styles.label}</h2>
-        </div>
-        <span className="text-xs font-semibold opacity-70">
-          {completeCount}/{items.length} done
-        </span>
+      <header className={styles.header}>
+        <button
+          type="button"
+          onClick={() => setExpanded((value) => !value)}
+          aria-expanded={expanded}
+          className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
+        >
+          <span className="flex items-center gap-2">
+            <span className={`h-5 w-1 rounded-full ${styles.accent}`} />
+            <span className="font-bold">{styles.label}</span>
+          </span>
+          <span className="flex shrink-0 items-center gap-2">
+            <span className="text-xs font-semibold opacity-70">
+              {completeCount}/{items.length} done
+            </span>
+            <ChevronDown
+              className={`size-4 transition-transform ${
+                expanded ? "rotate-180" : ""
+              }`}
+            />
+          </span>
+        </button>
       </header>
 
-      {items.length ? (
-        <ul>
-          {items.map((item, index) => (
-            <DailyTaskRow
-              key={item.entry.id}
-              item={item}
-              section={section}
-              index={index}
-              sectionItems={items}
-              ledgerId={ledgerId}
-            />
-          ))}
-        </ul>
-      ) : (
-        <div className="px-4 py-7 text-center text-sm text-slate-400">
-          Nothing planned here yet.
-        </div>
-      )}
+      {expanded &&
+        (items.length ? (
+          <ul>
+            {items.map((item, index) => (
+              <DailyTaskRow
+                key={item.entry.id}
+                item={item}
+                section={section}
+                index={index}
+                sectionItems={items}
+                ledgerId={ledgerId}
+              />
+            ))}
+          </ul>
+        ) : (
+          <div className="px-4 py-7 text-center text-sm text-slate-400">
+            Nothing planned here yet.
+          </div>
+        ))}
     </section>
   );
 }
@@ -360,7 +380,8 @@ function StandupItemRow({
                 await onDelete(item.id);
               })
             }
-            aria-label="Delete standup item"
+            aria-label="Remove from standup"
+            title="Remove from standup"
             className="rounded p-1.5 text-amber-700/50 hover:bg-red-50 hover:text-red-600"
           >
             <X className="size-3.5" />
@@ -578,14 +599,45 @@ export default function DailyLedgerPage({
   const [captureSection, setCaptureSection] = useState<DailySection>("WORK");
   const [selectedTaskId, setSelectedTaskId] = useState("");
   const [pullSection, setPullSection] = useState<DailySection>("WORK");
+  const [showEveningWrapUpPrompt, setShowEveningWrapUpPrompt] = useState(false);
   const [isPending, startTransition] = useTransition();
   const isRecovery = ledger.ledger.date < todayDate;
+  const isWeekend = isWeekendDateKey(ledger.ledger.date);
+
+  useEffect(() => {
+    function updateEveningPrompt() {
+      const dismissedLedgerId = window.localStorage.getItem(
+        DISMISSED_WRAP_UP_PROMPT_KEY,
+      );
+      setShowEveningWrapUpPrompt(
+        new Date().getHours() >= DEFAULT_WRAP_UP_HOUR &&
+          dismissedLedgerId !== ledger.ledger.id,
+      );
+    }
+
+    updateEveningPrompt();
+    const intervalId = window.setInterval(updateEveningPrompt, 60_000);
+    return () => window.clearInterval(intervalId);
+  }, [ledger.ledger.id]);
+
+  function dismissEveningWrapUpPrompt() {
+    window.localStorage.setItem(
+      DISMISSED_WRAP_UP_PROMPT_KEY,
+      ledger.ledger.id,
+    );
+    setShowEveningWrapUpPrompt(false);
+  }
 
   function addNewTask(event: FormEvent) {
     event.preventDefault();
     if (!title.trim()) return;
     startTransition(async () => {
-      await createDailyTaskAction(ledger.ledger.date, captureSection, title);
+      await createDailyTaskAction(
+        ledger.ledger.date,
+        captureSection,
+        title,
+        null,
+      );
       setTitle("");
       setCaptureExpanded(false);
     });
@@ -649,10 +701,55 @@ export default function DailyLedgerPage({
         </section>
       )}
 
-      <StandupSection
-        ledgerId={ledger.ledger.id}
-        items={ledger.standupItems}
-      />
+      {!isRecovery && showEveningWrapUpPrompt && (
+        <section className="relative rounded-xl border border-indigo-200 bg-indigo-50 p-4 pr-12 shadow-sm">
+          <button
+            type="button"
+            onClick={dismissEveningWrapUpPrompt}
+            aria-label="Dismiss wrap-up notice for today"
+            title="Dismiss for today"
+            className="absolute right-2 top-2 inline-flex size-8 items-center justify-center rounded-md text-indigo-600 transition hover:bg-indigo-100 hover:text-indigo-900"
+          >
+            <X className="size-4" />
+          </button>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="font-bold text-indigo-950">Ready to wrap up?</p>
+              <p className="mt-1 text-sm leading-5 text-indigo-800">
+                Resolve today’s unfinished items and prepare the next ledger.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setWrappingUp(true)}
+              className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-lg bg-indigo-700 px-4 py-2 text-sm font-bold text-white hover:bg-indigo-800"
+            >
+              <CalendarCheck2 className="size-4" />
+              Wrap up day
+            </button>
+          </div>
+        </section>
+      )}
+
+      {!isWeekend && (
+        <StandupSection
+          ledgerId={ledger.ledger.id}
+          items={ledger.standupItems}
+        />
+      )}
+
+      {!isRecovery && (
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={() => setWrappingUp(true)}
+            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-400 hover:bg-slate-50"
+          >
+            <CalendarCheck2 className="size-4" />
+            Wrap up day
+          </button>
+        </div>
+      )}
 
       {!isRecovery && (captureExpanded ? (
         <form
@@ -665,7 +762,9 @@ export default function DailyLedgerPage({
                 <button
                   key={section}
                   type="button"
-                  onClick={() => setCaptureSection(section)}
+                  onClick={() => {
+                    setCaptureSection(section);
+                  }}
                   className={`rounded-md px-3 py-2 text-sm font-semibold transition ${
                     captureSection === section
                       ? "bg-white text-slate-950 shadow-sm"
@@ -704,6 +803,13 @@ export default function DailyLedgerPage({
               <Plus className="size-5" />
             </button>
           </div>
+          <p className="mt-1.5 text-xs text-slate-500">
+            Saved to {captureSection === "WORK"
+              ? "Work Backlog"
+              : "Personal Back Burner"} and added to today’s {sectionStyles[
+                captureSection
+              ].shortLabel} list. You’ll review its outcome during Wrap Up.
+          </p>
         </form>
       ) : (
         <button
@@ -734,29 +840,6 @@ export default function DailyLedgerPage({
         ledgerId={ledger.ledger.id}
       />
 
-      {!isRecovery && (
-        <button
-          type="button"
-          onClick={() => setWrappingUp(true)}
-          className="flex w-full items-center justify-between gap-3 rounded-xl border border-slate-300 bg-white px-4 py-3 text-left shadow-sm transition hover:border-slate-400 hover:bg-slate-50"
-        >
-          <span className="flex items-center gap-3">
-            <span className="flex size-8 items-center justify-center rounded-full bg-slate-900 text-white">
-              <CalendarCheck2 className="size-4" />
-            </span>
-            <span>
-              <span className="block text-sm font-bold text-slate-900">
-                Wrap up day
-              </span>
-              <span className="block text-xs text-slate-500">
-                Resolve unfinished work and prepare the next ledger
-              </span>
-            </span>
-          </span>
-          <ArrowRight className="size-4 shrink-0 text-slate-400" />
-        </button>
-      )}
-
       {!isRecovery && <details className="group rounded-xl border border-slate-200 bg-white">
         <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 font-semibold text-slate-800">
           <span className="flex items-center gap-2">
@@ -773,10 +856,16 @@ export default function DailyLedgerPage({
             onChange={(event) => setSelectedTaskId(event.target.value)}
             className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm"
           >
-            <option value="">Choose a Back Burner or project task…</option>
+            <option value="">Choose a planning or project task…</option>
             {availableTasks.map(({ task, projectTitle }) => (
               <option key={task.id} value={task.id}>
-                {projectTitle ? `[${projectTitle}] ` : "[Back Burner] "}
+                {projectTitle
+                  ? `[${projectTitle}] `
+                  : task.area === "WORK"
+                    ? "[Work Backlog] "
+                    : task.area === "PERSONAL"
+                      ? "[Personal Back Burner] "
+                      : "[Inbox] "}
                 {task.title}
               </option>
             ))}
@@ -789,9 +878,9 @@ export default function DailyLedgerPage({
               }
               className="min-w-0 flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm"
             >
-              <option value="WORK">Work / Standup</option>
-              <option value="PERSONAL">Personal / Home</option>
-            </select>
+              <option value="WORK">Work</option>
+              <option value="PERSONAL">Personal</option>
+c            </select>
             <button
               disabled={isPending || !selectedTaskId}
               className="rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-40"

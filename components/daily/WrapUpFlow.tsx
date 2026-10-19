@@ -12,9 +12,11 @@ import {
 } from "lucide-react";
 import { wrapUpDailyLedgerAction } from "@/lib/actions";
 import { formatLedgerDate, getRolloverDateKey } from "@/lib/dates";
+import { buildStandupDraft } from "@/lib/standup";
 import {
   DailyLedgerView,
   DailyTaskView,
+  StandupProgressStatus,
   WrapUpDisposition,
 } from "@/lib/types";
 
@@ -32,7 +34,7 @@ const dispositionOptions: Array<{
   },
   {
     value: "MOVE",
-    label: "Carry forward",
+    label: "Keep pending",
     icon: ArrowRight,
     selectedClassName: "border-blue-500 bg-blue-50 text-blue-800",
   },
@@ -76,7 +78,7 @@ function CompletedReview({ items }: { items: DailyTaskView[] }) {
           </div>
         </div>
         <span className="text-xs font-semibold text-emerald-700">
-          {items.length} for standup
+          {items.length} completed
         </span>
       </header>
       {items.length > 0 ? (
@@ -109,6 +111,14 @@ export default function WrapUpFlow({
   const [decisions, setDecisions] = useState<
     Record<string, WrapUpDisposition>
   >({});
+  const [consolidateStandupTickets, setConsolidateStandupTickets] =
+    useState(true);
+  const [standupEdits, setStandupEdits] = useState<
+    Record<string, { summary?: string; detail?: string }>
+  >({});
+  const [standupStatuses, setStandupStatuses] = useState<
+    Record<string, StandupProgressStatus>
+  >({});
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const allItems = useMemo(
@@ -122,9 +132,15 @@ export default function WrapUpFlow({
     (item) => item.entry.outcome === "COMPLETED",
   );
   const unfinished = allItems.filter((item) => item.entry.outcome === "OPEN");
-  const resolvedCount = unfinished.filter(
-    (item) => decisions[item.entry.id],
-  ).length;
+  const resolvedCount = unfinished.filter((item) => {
+    const disposition = decisions[item.entry.id];
+    return (
+      disposition &&
+      (disposition !== "MOVE" ||
+        item.entry.section !== "WORK" ||
+        standupStatuses[item.entry.id])
+    );
+  }).length;
   const allResolved = resolvedCount === unfinished.length;
   const nextDate = getRolloverDateKey(ledger.ledger.date, todayDate);
   const moved = unfinished.filter(
@@ -139,9 +155,55 @@ export default function WrapUpFlow({
   const completedDuringWrapUp = unfinished.filter(
     (item) => decisions[item.entry.id] === "COMPLETE",
   );
-  const standupCount =
-    completedWork.length +
-    completedDuringWrapUp.filter((item) => item.entry.section === "WORK").length;
+  const standupCandidates = [
+    ...completedWork.map((item) => ({
+      taskId: item.task.id,
+      title: item.task.title,
+      status: "COMPLETE" as const,
+      sortOrder: item.entry.sortOrder,
+    })),
+    ...completedDuringWrapUp
+      .filter((item) => item.entry.section === "WORK")
+      .map((item) => ({
+        taskId: item.task.id,
+        title: item.task.title,
+        status: "COMPLETE" as const,
+        sortOrder: item.entry.sortOrder,
+      })),
+    ...moved
+      .filter(
+        (item) =>
+          item.entry.section === "WORK" &&
+          (standupStatuses[item.entry.id] === "IN_PROGRESS" ||
+            standupStatuses[item.entry.id] === "NEXT"),
+      )
+      .map((item) => ({
+        taskId: item.task.id,
+        title: item.task.title,
+        status: standupStatuses[item.entry.id] as
+          | "IN_PROGRESS"
+          | "NEXT",
+        sortOrder: item.entry.sortOrder,
+      })),
+  ];
+  const standupDraft = buildStandupDraft(
+    standupCandidates,
+    consolidateStandupTickets,
+  );
+  const standupDraftForSave = standupDraft.map((item) => {
+    const key = item.sourceTaskIds.join(":");
+    const edit = standupEdits[key];
+    return {
+      ...item,
+      summary: edit?.summary ?? item.summary,
+      detail: edit?.detail ?? item.detail,
+    };
+  });
+  const standupDraftIsValid = standupDraftForSave.every((item) =>
+    item.summary.trim(),
+  );
+  const readyToFinish = allResolved && standupDraftIsValid;
+  const standupCount = standupDraft.length;
 
   function choose(entryId: string, disposition: WrapUpDisposition) {
     setDecisions((current) => {
@@ -153,6 +215,21 @@ export default function WrapUpFlow({
       delete next[entryId];
       return next;
     });
+    if (disposition !== "MOVE") {
+      setStandupStatuses((current) => {
+        const next = { ...current };
+        delete next[entryId];
+        return next;
+      });
+    }
+    setError(null);
+  }
+
+  function chooseStandupStatus(
+    entryId: string,
+    status: StandupProgressStatus,
+  ) {
+    setStandupStatuses((current) => ({ ...current, [entryId]: status }));
     setError(null);
   }
 
@@ -166,7 +243,7 @@ export default function WrapUpFlow({
   }
 
   function finishWrapUp() {
-    if (!allResolved) return;
+    if (!allResolved || !standupDraftIsValid) return;
     startTransition(async () => {
       try {
         setError(null);
@@ -175,7 +252,13 @@ export default function WrapUpFlow({
           unfinished.map((item) => ({
             entryId: item.entry.id,
             disposition: decisions[item.entry.id],
+            standupStatus:
+              item.entry.section === "WORK" &&
+              decisions[item.entry.id] === "MOVE"
+                ? standupStatuses[item.entry.id]
+                : undefined,
           })),
+          standupDraftForSave,
         );
       } catch (cause) {
         setError(
@@ -213,6 +296,26 @@ export default function WrapUpFlow({
       </div>
 
       <CompletedReview items={completedWork} />
+
+      <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-amber-200 bg-amber-50/60 px-4 py-3">
+        <input
+          type="checkbox"
+          checked={consolidateStandupTickets}
+          onChange={(event) =>
+            setConsolidateStandupTickets(event.target.checked)
+          }
+          className="mt-0.5 size-4 shrink-0 accent-amber-700"
+        />
+        <span>
+          <span className="block text-sm font-bold text-amber-950">
+            Consolidate matching ticket numbers
+          </span>
+          <span className="mt-0.5 block text-xs leading-5 text-amber-800">
+            Exact identifiers such as DD-4781 are grouped. Completed work is
+            labeled Complete; pending Work uses the Standup status you choose.
+          </span>
+        </span>
+      </label>
 
       {completedPersonal.length > 0 && (
         <p className="rounded-lg bg-slate-100 px-4 py-2.5 text-sm text-slate-600">
@@ -252,7 +355,7 @@ export default function WrapUpFlow({
                   onClick={carryAllForward}
                   className="text-xs font-bold text-blue-700 hover:text-blue-900"
                 >
-                  Carry all forward
+                  Keep all pending
                 </button>
               </div>
             </div>
@@ -292,6 +395,51 @@ export default function WrapUpFlow({
                       );
                     })}
                   </div>
+                  {decisions[item.entry.id] === "MOVE" &&
+                    (item.entry.section === "WORK" ? (
+                      <div className="rounded-lg border border-blue-200 bg-blue-50/60 p-3">
+                        <p className="text-xs font-bold text-blue-950">
+                          Include this pending item in Standup?
+                        </p>
+                        <div className="mt-2 grid grid-cols-3 gap-2">
+                          {(
+                            [
+                              ["IN_PROGRESS", "In progress"],
+                              ["NEXT", "Next"],
+                              ["EXCLUDE", "Do not include"],
+                            ] as const
+                          ).map(([status, label]) => (
+                            <button
+                              key={status}
+                              type="button"
+                              aria-pressed={
+                                standupStatuses[item.entry.id] === status
+                              }
+                              onClick={() =>
+                                chooseStandupStatus(item.entry.id, status)
+                              }
+                              className={`rounded-md border px-2 py-2 text-xs font-semibold transition ${
+                                standupStatuses[item.entry.id] === status
+                                  ? "border-blue-500 bg-white text-blue-900 shadow-sm"
+                                  : "border-blue-200 bg-transparent text-blue-700 hover:bg-white"
+                              }`}
+                            >
+                              {label}
+                            </button>
+                          ))}
+                        </div>
+                        {!standupStatuses[item.entry.id] && (
+                          <p className="mt-2 text-xs text-blue-700">
+                            Choose a reporting status to finish resolving this
+                            Work item.
+                          </p>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-800">
+                        This remains an open to-do on the next Personal list.
+                      </p>
+                    ))}
                 </li>
               ))}
             </ul>
@@ -341,7 +489,7 @@ export default function WrapUpFlow({
               </div>
               <div className="rounded-lg bg-blue-50 p-3">
                 <p className="text-xl font-bold text-blue-900">{moved.length}</p>
-                <p className="text-xs text-blue-700">carried forward</p>
+                <p className="text-xs text-blue-700">pending tomorrow</p>
               </div>
               <div className="rounded-lg bg-amber-50 p-3">
                 <p className="text-xl font-bold text-amber-900">
@@ -362,6 +510,60 @@ export default function WrapUpFlow({
                 <p className="text-xs text-emerald-700">standup items</p>
               </div>
             </div>
+
+            {standupDraft.length > 0 && (
+              <div className="rounded-lg border border-amber-200 bg-amber-50/50 p-3">
+                <h3 className="font-bold text-amber-950">Standup preview</h3>
+                <ul className="mt-2 space-y-3">
+                  {standupDraftForSave.map((item) => {
+                    const key = item.sourceTaskIds.join(":");
+                    return (
+                    <li key={key} className="space-y-2">
+                      <input
+                        value={item.summary}
+                        onChange={(event) =>
+                          setStandupEdits((current) => ({
+                            ...current,
+                            [key]: {
+                              ...current[key],
+                              summary: event.target.value,
+                            },
+                          }))
+                        }
+                        aria-label="Standup summary"
+                        className="w-full rounded-md border border-amber-200 bg-white px-2.5 py-2 font-semibold text-slate-800 outline-none focus:border-amber-500"
+                      />
+                      {item.sourceTaskIds.length > 1 && (
+                        <textarea
+                          value={item.detail ?? ""}
+                          onChange={(event) =>
+                            setStandupEdits((current) => ({
+                              ...current,
+                              [key]: {
+                                ...current[key],
+                                detail: event.target.value,
+                              },
+                            }))
+                          }
+                          aria-label="Standup detail"
+                          rows={Math.max(
+                            2,
+                            (item.detail ?? "").split("\n").length,
+                          )}
+                          className="w-full resize-y rounded-md border border-amber-200 bg-white px-2.5 py-2 text-xs leading-5 text-slate-600 outline-none focus:border-amber-500"
+                        />
+                      )}
+                      {!item.summary.trim() && (
+                        <p className="text-xs font-semibold text-red-700">
+                          A standup summary is required.
+                        </p>
+                      )}
+                    </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
 
             {moved.length > 0 && (
               <div>
@@ -395,7 +597,7 @@ export default function WrapUpFlow({
 
       <div
         className={`rounded-xl border bg-white p-4 shadow-sm transition ${
-          allResolved ? "border-emerald-300" : "border-slate-200"
+          readyToFinish ? "border-emerald-300" : "border-slate-200"
         }`}
       >
         <div className="mb-3 flex items-center gap-2">
@@ -407,19 +609,21 @@ export default function WrapUpFlow({
               Confirm
             </p>
             <h2 className="font-bold text-slate-900">
-              {allResolved ? "Ready to finish wrap-up" : "Finish wrap-up"}
+              {readyToFinish ? "Ready to finish wrap-up" : "Finish wrap-up"}
             </h2>
           </div>
         </div>
         <p className="mb-4 text-sm text-slate-500">
-          {allResolved
+          {readyToFinish
             ? "All unfinished tasks have an outcome. Confirm to close this ledger and create the next one."
-            : "Resolve every unfinished task before confirming. Additional planning can be done afterward."}
+            : allResolved
+              ? "Add a summary for every standup item before confirming."
+              : "Resolve every unfinished task before confirming. Additional planning can be done afterward."}
         </p>
         <button
           type="button"
           onClick={finishWrapUp}
-          disabled={!allResolved || isPending}
+          disabled={!allResolved || !standupDraftIsValid || isPending}
           className="flex w-full items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-3 text-sm font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
         >
           <CheckCircle2 className="size-5" />

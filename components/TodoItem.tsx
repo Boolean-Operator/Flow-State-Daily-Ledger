@@ -2,10 +2,10 @@
 "use client";
 
 import { Task } from "@/lib/types";
-import { updateTaskAction, deleteTaskAction } from "@/lib/actions";
+import { archiveTasksAction, updateTaskAction } from "@/lib/actions";
 import { useState } from "react";
 import { Button } from "./ui/button";
-import { Pencil, Trash2 } from "lucide-react";
+import { Archive, Pencil } from "lucide-react";
 
 export default function TodoItem({
   collectionId,
@@ -13,12 +13,14 @@ export default function TodoItem({
   selectionMode = false,
   selected = false,
   onSelectedChange,
+  onArchived,
 }: {
   collectionId: string;
   task: Task;
   selectionMode?: boolean;
   selected?: boolean;
   onSelectedChange?: (selected: boolean) => void;
+  onArchived?: (task: Task) => void;
 }) {
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(task.title);
@@ -42,9 +44,9 @@ export default function TodoItem({
     });
   }
 
-  async function remove() {
-    if (!window.confirm(`Permanently delete “${task.title}”?`)) return;
-    await deleteTaskAction(collectionId, task.id);
+  async function archive() {
+    await archiveTasksAction(collectionId, [task.id]);
+    onArchived?.(task);
   }
 
   if (editing) {
@@ -152,12 +154,12 @@ export default function TodoItem({
             <Button
               variant="outline"
               size="icon-sm"
-              className="bg-white text-red-600 hover:bg-red-600 hover:text-white"
-              onClick={remove}
-              aria-label={`Delete ${task.title}`}
-              title="Delete item"
+              className="bg-white text-amber-700 hover:bg-amber-700 hover:text-white"
+              onClick={archive}
+              aria-label={`Archive ${task.title}`}
+              title="Archive item"
             >
-              <Trash2 />
+              <Archive />
             </Button>
           </div>
         )}

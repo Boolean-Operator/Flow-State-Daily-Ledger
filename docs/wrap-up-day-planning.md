@@ -12,7 +12,7 @@ The wrap-up flow should help the user deliberately close the current day without
 - Require an explicit decision for every unfinished Daily Ledger task.
 - Preserve the current day as an accurate historical record.
 - Prepare the next Daily Ledger from those decisions.
-- Create an editable Yesterday / Standup draft from completed Work tasks.
+- Create an editable Yesterday / Standup draft from completed Work and selected pending Work.
 
 The initial version is deterministic application behavior. AI-generated summaries and recommendations are out of scope for this increment.
 
@@ -51,14 +51,15 @@ The current Daily Ledger should provide a clear **Wrap up day** action. Selectin
 The required flow has four broad stages:
 
 1. **Review completed work**
-   - Show completed Work tasks that will seed the next ledger's Yesterday / Standup section.
+   - Show completed Work tasks that will seed the next ledger's Yesterday / Standup section and offer In progress, Next, or Do not include for Work kept pending.
    - Keep completed Personal tasks in history, but exclude them from the standup draft.
 2. **Resolve unfinished tasks**
    - Present every unfinished Work and Personal task from the current ledger.
    - Require one disposition per task: Mark Complete, Move to Tomorrow, Return to Back Burner, or Cancel.
 3. **Preview the result**
    - Show the next ledger that will be created from the selected dispositions.
-   - Show the draft Yesterday / Standup items created from completed Work tasks.
+   - Show an editable draft of Yesterday / Standup items created from completed and carried Work tasks.
+   - Offer deterministic consolidation when multiple tasks share the same normalized ticket identifier, such as `DD-4781`.
 4. **Confirm and finish**
    - Summarize the effects of the selected dispositions.
    - Apply the rollover as one operation only after confirmation.
@@ -106,13 +107,15 @@ Confirmation should perform the entire rollover atomically from the user's persp
 3. Update the affected canonical tasks without creating duplicate task records.
 4. Create the next active ledger.
 5. Add placements for tasks marked Move to Tomorrow.
-6. Generate draft standup items from completed Work tasks.
+6. Generate draft standup items from completed Work and pending Work explicitly selected for reporting, applying the user's status, ticket-consolidation choice, and preview edits.
 7. Close the current ledger and record its close time.
 8. Navigate to the prepared next ledger or show a clear completion state.
 
 Repeating the confirmation request must not duplicate next-day placements or standup items.
 
 During an on-time evening wrap-up, the next ledger will normally be dated for the next calendar day. During morning recovery, it should be dated for the current day rather than creating ledgers for every skipped date. Skipping weekends or choosing the next configured workday remains an explicit product decision rather than an implicit rule.
+
+Weekend ledgers remain available for Work and Personal planning, but omit the Standup section from the Daily Ledger. This is a presentation rule only: rollover dates, generated standup records, missed-day recovery, and weekday standup editing behavior remain unchanged.
 
 ## Optional Preparation After Closure
 
@@ -198,7 +201,7 @@ Staleness should be measured from the most recent applicable timestamp. The exac
 
 ## Yesterday / Standup Draft
 
-Each completed Work task should initially produce one standup item using the task title as its summary and a reference to the canonical task. The generated result is a draft, not a locked transcript.
+Completed Work should be labeled **Complete**. Work kept pending remains an open to-do on the next Work list and separately requires a Standup choice: **In progress** when meaningful work has started, **Next** when intentionally planned but not started, or **Do not include**. When consolidation is enabled, reportable tasks sharing an exact normalized ticket identifier should produce one grouped item with a status-labeled detail line for each source task. Tasks without a recognized identifier remain individual items. The preview remains editable, and each saved item retains references to all of its canonical source tasks. The generated result is a draft, not a locked transcript.
 
 On the next Daily Ledger, the user may:
 
@@ -229,12 +232,15 @@ The wrap-up experience should be mobile-first and optimized for a short end-of-d
 - Make each unfinished task's selected disposition obvious.
 - Provide sensible bulk actions, such as “Move all to tomorrow,” while keeping individual choices editable.
 - Keep the final confirmation disabled until all unfinished tasks are resolved.
+- Treat lifecycle and Standup reporting as separate decisions. **Keep pending** preserves an unfinished task as an open to-do on the next Work or Personal list. Pending Work then requires an explicit reporting choice: **In progress**, **Next**, or **Do not include**. Personal items never enter Standup.
 - Show exact counts in the confirmation summary.
 - Make Cancel visually distinct and harder to select accidentally.
 - Clearly distinguish the required closure checklist from optional preparation.
 - If the active ledger is from a previous date, show a persistent recovery state rather than silently switching dates.
 - Keep quick capture near the top of the normal Daily Ledger, but collapse it to a compact **Add a task…** control when idle.
 - Hide Daily Ledger quick capture during the required wrap-up checklist and restore it during optional preparation after closure.
+- Keep a compact **Wrap up day** action between Standup and quick capture throughout the day. During the local-only beta, surface a separate prominent notification above Standup at 6:00 PM in the device's local time without automatically closing the ledger. Allow the user to dismiss that notification for the current ledger while keeping the regular wrap-up action available; the notification becomes eligible again on the next ledger.
+- When user accounts and Settings are introduced, replace the beta default with the user's preferred wrap-up time and account timezone. This preference controls the in-app prompt; notification permission remains a separate, explicit setting.
 
 The normal Daily Ledger should clearly indicate when it is closed and should not allow further task mutations without a future, explicit reopen capability. Unified components, custom tooltip behavior, and other design-system work are intentionally tracked in [Stage Two Notes](./stage-two-notes.md) rather than in this feature plan.
 
@@ -273,7 +279,7 @@ Slices 1 through 4 form the implemented beta workflow. The remaining planning, r
 ## Initial Acceptance Criteria
 
 - A day cannot close while any unfinished Daily Ledger task lacks a disposition.
-- Completed Work tasks appear as editable standup draft items on the next ledger.
+- Completed and carried Work tasks appear as editable, status-labeled standup draft items on the next ledger.
 - Completed Personal tasks do not appear in that draft.
 - Moved tasks appear once on the next ledger and still appear with a moved outcome in the closed ledger.
 - Deferred tasks remain open in the Back Burner or their project and do not appear tomorrow.
@@ -291,7 +297,7 @@ Slices 1 through 4 form the implemented beta workflow. The remaining planning, r
 ## Current Beta Decisions
 
 - On-time wrap-up creates the next calendar day's ledger; missed-day recovery creates the current day's ledger.
-- All completed Work tasks generate editable standup draft items automatically.
+- All completed Work and pending Work selected as In progress or Next are represented exactly once in the editable standup draft; pending Work marked Do not include remains only on the next Work list.
 - Carry Forward preserves the task's current Work or Personal section and places it after existing items in that destination section.
 - Existing standup items remain attached to the ledger being closed and do not roll forward.
 - Standup items may be edited, reordered, or removed without changing their linked task or task history.
